@@ -1,0 +1,10 @@
+Running this script
+
+  terraform init
+  # Specify the global terraform.tfvars first to grab common variables
+  # Alternatively, specify the terraform.tfvars in this directory
+  terraform plan -var-file ../terraform.tfvars -var-file terraform.tfvars -out /tmp/storage.plan
+
+  # If everything looks good
+  terraform apply /tmp/storage.plan
+  rm /tmp/storage.plan
