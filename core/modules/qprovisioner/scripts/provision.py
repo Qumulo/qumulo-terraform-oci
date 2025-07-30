@@ -374,7 +374,7 @@ def create_cluster(config: ProvisioningConfig) -> None:
                "/v1/tunables/s3_object_client_socket_recv_timeout_ms <<< '{\"configured_value\": \"10000\"}'")
 
     if config.dev_environment == "true":
-        qq_command("set_monitoring_conf --mq-host qpi.staging-missionq.qumulo.com "
+        qq_command("set_monitoring_conf --mq-host staging-missionq.qumulo.com "
                    "--nexus-host api.spog-staging.qumulo.com")
 
     apply_initial_floating_ips(flips, config.netmask)
