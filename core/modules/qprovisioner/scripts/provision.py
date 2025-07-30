@@ -338,6 +338,9 @@ def update_cluster_membership(node_count: int, node_ips_and_fault_domains: str,
 
 
 def create_cluster(config: ProvisioningConfig) -> None:
+    if config.node_count == 0:
+        return
+
     logging.info(f"All of the nodes are out of quorum, forming a new cluster with {config.node_count} nodes.")
 
     ips_and_fault_domains = config.node_ips_and_fault_domains.split()
