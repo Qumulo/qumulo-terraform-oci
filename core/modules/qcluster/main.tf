@@ -77,6 +77,11 @@ resource "oci_core_instance" "node" {
 
   lifecycle {
     ignore_changes = [metadata, availability_domain, fault_domain, source_details]
+
+    precondition {
+      condition     = var.check_cluster_node_count == false
+      error_message = "Lowering the number of deployed nodes (q_node_count) is only supported after removing the extra nodes from the cluster membership."
+    }
   }
   shape = var.node_instance_shape
   shape_config {
@@ -135,4 +140,6 @@ module "disk" {
   vpus_per_gb            = "10"
   defined_tags           = var.defined_tags
   freeform_tags          = var.freeform_tags
+
+  check_permanent_disk_count = var.check_permanent_disk_count
 }

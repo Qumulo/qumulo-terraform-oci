@@ -129,3 +129,13 @@ variable "freeform_tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "check_cluster_node_count" {
+  description = "Result of validation of cluster node count."
+  type        = bool
+}
+
+variable "check_permanent_disk_count" {
+  description = "Result of validation of permanent disk count."
+  type        = bool
+}

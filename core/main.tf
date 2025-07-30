@@ -179,6 +179,11 @@ locals {
   secret_key               = sensitive(var.custom_secret_key != null ? var.custom_secret_key : oci_identity_customer_secret_key.cluster_secret_key[0].key)
   retrieve_stored_value_sh = ["${path.module}/scripts/retrieve_stored_value.sh"]
   vault_key_ocid           = var.vault_key_ocid != null ? var.vault_key_ocid : oci_kms_key.vault_key[0].id
+
+  existing_node_count           = tonumber(data.external.cluster_node_count.result.value)
+  existing_permanent_disk_count = tonumber(data.external.deployed_permanent_disk_count.result.value)
+  check_cluster_node_count      = var.q_node_count < local.existing_node_count
+  check_permanent_disk_count    = local.existing_permanent_disk_count > 0 && local.existing_permanent_disk_count != local.permanent_disk_count
 }
 
 resource "oci_vault_secret" "cluster_node_count" {
@@ -206,13 +211,6 @@ resource "oci_vault_secret" "cluster_node_count" {
 # This item acts a barrier to prevent inadvertant node removal before the cluster has successfully removed nodes from membership
 data "external" "cluster_node_count" {
   program = concat(local.retrieve_stored_value_sh, [oci_vault_secret.cluster_node_count.id])
-
-  lifecycle {
-    postcondition {
-      condition     = tonumber(self.result.value) <= var.q_node_count
-      error_message = "Lowering the number of deployed nodes (q_node_count) is only supported after removing the extra nodes from the cluster membership."
-    }
-  }
 }
 
 resource "oci_vault_secret" "deployed_permanent_disk_count" {
@@ -239,13 +237,6 @@ resource "oci_vault_secret" "deployed_permanent_disk_count" {
 
 data "external" "deployed_permanent_disk_count" {
   program = concat(local.retrieve_stored_value_sh, [oci_vault_secret.deployed_permanent_disk_count.id])
-
-  lifecycle {
-    postcondition {
-      condition     = tonumber(self.result.value) == 0 || tonumber(self.result.value) == local.permanent_disk_count
-      error_message = "Modifying the permanent disk count via variable block_volume_count is not supported after the initial deployment."
-    }
-  }
 }
 
 resource "oci_vault_secret" "cluster_soft_capacity_limit" {
@@ -333,9 +324,10 @@ module "qcluster" {
   defined_tags  = var.defined_tags
   freeform_tags = var.freeform_tags
 
+  check_cluster_node_count   = local.check_cluster_node_count
+  check_permanent_disk_count = local.check_permanent_disk_count
+
   depends_on = [
-    data.external.cluster_node_count,
-    data.external.deployed_permanent_disk_count,
     oci_identity_policy.cluster_policy,
     oci_identity_policy.instance_policy
   ]
