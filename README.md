@@ -31,12 +31,12 @@ The deployment creates the following components:
       * Dynamic Group must include all compute instances in deployment compartment
       * Identity Policy must include following permissions
          ```
-         "Allow dynamic-group \<dynamic group name> to read secret-bundles in compartment id \<compartment ocid>"
-         "Allow dynamic-group \<dynamic group name> to use secrets in compartment id \<compartment ocid>"
-         "Allow dynamic-group \<dynamic group name> to manage virtual-network-family in compartment id \<compartment ocid>"
-         "Allow dynamic-group \<dynamic group name> to use instances in compartment id \<compartment ocid>" 
+         "Allow dynamic-group \<dynamic group name> to read secret-bundles in compartment id \<deployment compartment ocid>"
+         "Allow dynamic-group \<dynamic group name> to use secrets in compartment id \<deployment compartment ocid>"
+         "Allow dynamic-group \<dynamic group name> to manage virtual-network-family in compartment id \<network compartment ocid>"
+         "Allow dynamic-group \<dynamic group name> to use instances in compartment id \<deployment compartment ocid>" 
          ```
-      * Set variable `create_dynamic_group_and_identity_policy` to `true`
+      * Set variable `create_dynamic_group_and_identity_policy` to `false`
 
 4. OCI Configuration:
    * Valid OCI credentials set for the DEFAULT profile
@@ -211,10 +211,11 @@ The Terraform state is stored locally by default. For production deployments, co
 
 ## Deploying outside the Home Region
 To deploy a cluster outside the home region, the following changes are required:
-- Update the `region` variable in `terraform.tfvars` to the region where you want to deploy the cluster
-- Update the region for the DEFAULT profile in your `~/.oci/config` file to the region where you want to deploy the cluster
-- Update the `subnet_ocid` variable in `terraform.tfvars` to the subnet OCID of the subnet where you want to deploy the cluster
-- The Secrets Vaults for the cluster and persistent storage must be in the same region as the cluster
+- Update the `region` variable in `terraform.tfvars` to the region where you want to deploy the cluster.
+- Update the region for the DEFAULT profile in your `~/.oci/config` file to the region where you want to deploy the cluster.
+- Update the `subnet_ocid` variable in `terraform.tfvars` to the subnet OCID of the subnet where you want to deploy the cluster.
+- The Secrets Vaults for the cluster and persistent storage must be in the same region as the cluster.
+- You must use a precreated dynamic group and identity policy created in the home region for the cluster.  Set `create_dynamic_group_and_identity_policy` to `false` in `terraform.tfvars`.  Follow the instruction in the [Prerequisites](#prerequisites) section 3.B to create the dynamic group and identity policy.
 
 ## Support
 
