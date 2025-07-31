@@ -213,6 +213,18 @@ data "external" "cluster_node_count" {
   program = concat(local.retrieve_stored_value_sh, [oci_vault_secret.cluster_node_count.id])
 }
 
+resource "null_resource" "cluster_node_count_validation" {
+  triggers = {
+    result = local.check_cluster_node_count
+  }
+
+  provisioner "local-exec" {
+    command = <<EOT
+if [ "$result" = "true" ]; then echo "test" && exit 1; fi
+EOT
+  }
+}
+
 resource "oci_vault_secret" "deployed_permanent_disk_count" {
   compartment_id = var.compartment_ocid
   key_id         = local.vault_key_ocid
@@ -329,7 +341,8 @@ module "qcluster" {
 
   depends_on = [
     oci_identity_policy.cluster_policy,
-    oci_identity_policy.instance_policy
+    oci_identity_policy.instance_policy,
+    null_resource.cluster_node_count_validation,
   ]
 }
 
