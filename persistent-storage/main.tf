@@ -104,13 +104,6 @@ resource "oci_vault_secret" "bucket_count" {
 
 data "external" "bucket_count" {
   program = concat(local.retrieve_stored_value_sh, [oci_vault_secret.bucket_count.id])
-
-  lifecycle {
-    postcondition {
-      condition     = tonumber(self.result.value) <= var.object_storage_bucket_count
-      error_message = "Lowering the number of object storage buckets is not supported."
-    }
-  }
 }
 
 resource "oci_objectstorage_bucket" "bucket" {
@@ -121,16 +114,19 @@ resource "oci_objectstorage_bucket" "bucket" {
   freeform_tags  = var.freeform_tags
   defined_tags   = length(var.defined_tags) > 0 ? var.defined_tags : null
 
-  depends_on = [
-    data.external.bucket_count
-  ]
-
   provisioner "local-exec" {
     when    = destroy
     command = "oci os object bulk-delete --namespace-name ${self.namespace} --bucket-name ${self.name} --force"
   }
 
-  lifecycle { ignore_changes = [compartment_id, name, namespace] }
+  lifecycle {
+    ignore_changes = [compartment_id, name, namespace]
+
+    precondition {
+      condition = tonumber(data.external.bucket_count.result.value) <= var.object_storage_bucket_count
+      error_message = "Lowering the number of object storage buckets is not supported."
+    }
+  }
 }
 
 resource "null_resource" "deployed_bucket_count" {
