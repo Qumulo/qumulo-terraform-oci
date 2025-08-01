@@ -24,7 +24,7 @@
 
 variable "disk_count" {
   description = "The number of disks per node with which to create the cluster."
-  type        = string
+  type        = number
 }
 
 variable "persisted_disk_count" {
