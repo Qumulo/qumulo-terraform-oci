@@ -35,6 +35,11 @@ resource "oci_core_volume" "permanent_disk" {
   lifecycle {
     # Any disk property changes after the initial deployment are ignored
     ignore_changes = [availability_domain, compartment_id, size_in_gbs, vpus_per_gb]
+
+    precondition {
+      condition     = var.persisted_disk_count == 0 || var.persisted_disk_count == var.disk_count
+      error_message = "Modifying the permanent disk count via variable block_volume_count is not supported after the initial deployment."
+    }
   }
 }
 

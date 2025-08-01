@@ -206,13 +206,6 @@ resource "oci_vault_secret" "cluster_node_count" {
 # This item acts a barrier to prevent inadvertant node removal before the cluster has successfully removed nodes from membership
 data "external" "cluster_node_count" {
   program = concat(local.retrieve_stored_value_sh, [oci_vault_secret.cluster_node_count.id])
-
-  lifecycle {
-    postcondition {
-      condition     = tonumber(self.result.value) <= var.q_node_count
-      error_message = "Lowering the number of deployed nodes (q_node_count) is only supported after removing the extra nodes from the cluster membership."
-    }
-  }
 }
 
 resource "oci_vault_secret" "deployed_permanent_disk_count" {
@@ -239,13 +232,6 @@ resource "oci_vault_secret" "deployed_permanent_disk_count" {
 
 data "external" "deployed_permanent_disk_count" {
   program = concat(local.retrieve_stored_value_sh, [oci_vault_secret.deployed_permanent_disk_count.id])
-
-  lifecycle {
-    postcondition {
-      condition     = tonumber(self.result.value) == 0 || tonumber(self.result.value) == local.permanent_disk_count
-      error_message = "Modifying the permanent disk count via variable block_volume_count is not supported after the initial deployment."
-    }
-  }
 }
 
 resource "oci_vault_secret" "cluster_soft_capacity_limit" {
@@ -313,6 +299,8 @@ module "qcluster" {
   node_count           = var.q_node_count
   permanent_disk_count = local.permanent_disk_count
   floating_ip_count    = var.q_cluster_floating_ips
+  persisted_node_count = tonumber(data.external.cluster_node_count.result.value)
+  persisted_disk_count = tonumber(data.external.deployed_permanent_disk_count.result.value)
 
   node_instance_shape = var.node_instance_shape
   node_instance_ocpus = var.node_instance_ocpus
@@ -334,8 +322,6 @@ module "qcluster" {
   freeform_tags = var.freeform_tags
 
   depends_on = [
-    data.external.cluster_node_count,
-    data.external.deployed_permanent_disk_count,
     oci_identity_policy.cluster_policy,
     oci_identity_policy.instance_policy
   ]

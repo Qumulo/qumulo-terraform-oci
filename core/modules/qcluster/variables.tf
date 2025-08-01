@@ -57,6 +57,16 @@ variable "floating_ip_count" {
   type        = number
 }
 
+variable "persisted_node_count" {
+  description = "The number of Qumulo nodes in the already created cluster."
+  type        = number
+}
+
+variable "persisted_disk_count" {
+  description = "The number of permanent disks per node in the already created cluster."
+  type        = number
+}
+
 variable "node_instance_shape" {
   description = "The VM shape to use for the Qumulo nodes."
   type        = string
