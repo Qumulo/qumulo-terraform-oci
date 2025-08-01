@@ -27,6 +27,11 @@ variable "disk_count" {
   type        = string
 }
 
+variable "persisted_disk_count" {
+  description = "The number of permanent disks per node in the already created cluster."
+  type        = number
+}
+
 variable "availability_domain" {
   description = "The availability domain to be used for the cluster resources."
   type        = string

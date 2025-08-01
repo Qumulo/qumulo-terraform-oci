@@ -136,6 +136,7 @@ module "disk" {
   instance_id            = oci_core_instance.node[count.index].id
   node_id                = count.index
   disk_count             = var.permanent_disk_count
+  persisted_disk_count   = var.persisted_disk_count
   size_in_gbs            = "270"
   vpus_per_gb            = "10"
   defined_tags           = var.defined_tags
