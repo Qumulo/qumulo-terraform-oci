@@ -34,7 +34,7 @@ qumulo_core_rpm_url  = null
 # ****************************** Advanced Configurations **********************************************
 # q_node_count                  - The number of nodes to deploy, this number can be higher than q_cluster_node_count if not all deployed nodes are meant to be added to the cluster.
 # q_cluster_node_count          - The number of nodes in the Qumulo cluster membership
-# q_cluster_soft_capacity_limit - The maximum soft capacity of your Qumulo cluster, in TiB
+# q_cluster_soft_capacity_limit - The maximum soft capacity of your Qumulo cluster, in TB
 # node_instance_shape           - The vm shape for the Qumulo nodes
 # node_instance_ocpus           - The number of ocpus on each Qumulo node
 # block_volume_count            - The number of disks used as write cache and dkv per Qumulo node

@@ -150,7 +150,7 @@ Tearing down node resources typically takes less than 5 minutes to complete.
 
 ## Adding Object Storage Buckets
 The maximum soft capacity limit on the cluster is determined by the number of object storage buckets configured on the backend. Each object storage bucket
-supports up to 500TiB capacity. If more capacity beyond the current maximum soft capacity limit is needed, you need to add object storage buckets first.
+supports up to 500TB capacity. If more capacity beyond the current maximum soft capacity limit is needed, you need to add object storage buckets first.
 
 This is a two-step operation.
 
@@ -176,7 +176,7 @@ Now you have deployed additional buckets but they are not configured to be used 
 cd ../
 ```
 
-Optionally, you can increase the cluster soft capacity limit at the same time. The maximum cluster soft capacity limit is 500TiB per object storage bucket.
+Optionally, you can increase the cluster soft capacity limit at the same time. The maximum cluster soft capacity limit is 500TB per object storage bucket.
 ```hcl
 # Example configuration
 q_cluster_soft_capacity_limit = 1500
@@ -207,7 +207,7 @@ The Terraform state is stored locally by default. For production deployments, co
 ### Limitations
 - 4 node clusters with fault domain tolerence are not supported. We recommend an initial cluster of 3 nodes or 5 or more nodes for fault domain tolerence.
 - Changing a cluster of 3 nodes or 5 or more nodes to 4 nodes is not supported due to fault domain tolerence incompatibility, vice versa.
-- The maximum cluster soft capacity limit is 500TiB per object storage bucket.
+- The maximum cluster soft capacity limit is 500TB per object storage bucket.
 
 ## Deploying outside the Home Region
 To deploy a cluster outside the home region, the following changes are required:

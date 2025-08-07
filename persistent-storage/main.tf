@@ -123,7 +123,7 @@ resource "oci_objectstorage_bucket" "bucket" {
     ignore_changes = [compartment_id, name, namespace]
 
     precondition {
-      condition = tonumber(data.external.bucket_count.result.value) <= var.object_storage_bucket_count
+      condition     = tonumber(data.external.bucket_count.result.value) <= var.object_storage_bucket_count
       error_message = "Lowering the number of object storage buckets is not supported."
     }
   }
