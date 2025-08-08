@@ -17,12 +17,28 @@ The deployment creates the following components:
 2. You will need the following assets provided by Qumulo:
    * qumulo-core.rpm (version 7.4.3B or later)
 
-3. OCI User Permissions:
+3. OCI Object Storage User Permissions
+   * One of:
+      A. Deploying user has the following permissions:
+      * manage users in TENANCY
+      * manage groups in TENANCY
+      * manage policies in TENANCY
+
+      B. Precreated User, Group, and Identity Policy
+      * User with a created Customer Secret Key
+      * Group that includes this user
+      * Identity Poclicy that includes the statements:
+      ```
+          "Allow group <group created above> to manage object-family in compartment id <cluster deployment compartment> where target.bucket.name = <bucket-prefix in output from persistent storage terraform stack>-bucket-*/"
+      ```
+      * set the variables `custom_secret_key_id` and `custom_secret_key` to the Customer Secret Key OCID and key respectively.
+
+3. OCI Cluster User Permissions:
    * manage all-resources in compartment your-qumulo-compartment
 
    * One of: 
 
-       A. OCI Tenancy User Permissions:
+       A. Deploying user has the following permissions:
       * manage users IN TENANCY
       * manage groups IN TENANCY
       * manage dynamic-groups IN TENANCY
@@ -31,10 +47,10 @@ The deployment creates the following components:
       * Dynamic Group must include all compute instances in deployment compartment
       * Identity Policy must include following permissions
          ```
-         "Allow dynamic-group \<dynamic group name> to read secret-bundles in compartment id \<deployment compartment ocid>"
-         "Allow dynamic-group \<dynamic group name> to use secrets in compartment id \<deployment compartment ocid>"
-         "Allow dynamic-group \<dynamic group name> to manage virtual-network-family in compartment id \<network compartment ocid>"
-         "Allow dynamic-group \<dynamic group name> to use instances in compartment id \<deployment compartment ocid>" 
+         "Allow dynamic-group <dynamic group name> to read secret-bundles in compartment id <deployment compartment ocid>"
+         "Allow dynamic-group <dynamic group name> to use secrets in compartment id <deployment compartment ocid>"
+         "Allow dynamic-group <dynamic group name> to manage virtual-network-family in compartment id <network compartment ocid>"
+         "Allow dynamic-group <dynamic group name> to use instances in compartment id <deployment compartment ocid>" 
          ```
       * Set variable `create_dynamic_group_and_identity_policy` to `false`
 
