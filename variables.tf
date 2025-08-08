@@ -243,6 +243,7 @@ variable "qumulo_core_rpm_path" {
   description = "The local path to the qumulo-core.rpm file for the version of Qumulo you want to install."
   type        = string
   nullable    = true
+  default     = null
 
   validation {
     condition = (
@@ -257,6 +258,7 @@ variable "qumulo_core_rpm_url" {
   description = "A URL accessible to the instances pointing to the qumulo-core.rpm object for the version of Qumulo you want to install."
   type        = string
   nullable    = true
+  default     = null
 }
 
 variable "q_cluster_admin_password" {
