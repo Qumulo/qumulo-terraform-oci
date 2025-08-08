@@ -11,7 +11,7 @@ The deployment creates the following components:
 
 ## Prerequisites
 
-1. A Linux machine running Terraform version 1.7.5 or later
+1. A Linux machine running Terraform version 1.12.2 or later
    * OCI CLI and "jq" installed
 
 2. You will need the following assets provided by Qumulo:
