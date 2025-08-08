@@ -134,16 +134,16 @@ variable "q_cluster_name" {
 }
 
 variable "q_cluster_soft_capacity_limit" {
-  description = "The maximum soft capacity of your qumulo cluster, in TiB."
+  description = "The maximum soft capacity of your qumulo cluster, in TB."
   type        = number
   default     = 500
   validation {
     condition     = var.q_cluster_soft_capacity_limit >= 100
-    error_message = "q_cluster_soft_capacity_limit must be at least 100"
+    error_message = "q_cluster_soft_capacity_limit must be at least 100 TB"
   }
   validation {
     condition     = var.q_cluster_soft_capacity_limit <= 500 * length(local.persistent_storage.bucket)
-    error_message = "The maximum value for q_cluster_soft_capacity_limit is 500TiB per object storage bucket. Please add more buckets before increasing the capacity beyond the current supported maximum value of ${500 * length(local.persistent_storage.bucket)}TiB"
+    error_message = "The maximum value for q_cluster_soft_capacity_limit is 500TB per object storage bucket. Please add more buckets before increasing the capacity beyond the current supported maximum value of ${500 * length(local.persistent_storage.bucket)}TB"
   }
 }
 

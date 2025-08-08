@@ -106,10 +106,17 @@ class ProvisioningError(Exception):
     pass
 
 
-def run_command(cmd: str, timeout: Optional[int] = None, check: bool = True) -> subprocess.CompletedProcess:
+def run_command(
+    cmd: str, timeout: Optional[int] = None, check: bool = True
+) -> subprocess.CompletedProcess:
     try:
         result = subprocess.run(
-            cmd, shell=True, check=check, capture_output=True, text=True, timeout=timeout
+            cmd,
+            shell=True,
+            check=check,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
         )
         if result.stdout.strip():
             logging.info(result.stdout.strip())
@@ -133,13 +140,17 @@ def qq_command(args: str, timeout: int = 300) -> subprocess.CompletedProcess:
 
 def update_secret(secret_id: str, value: str) -> None:
     """Update an OCI vault secret with base64-encoded value"""
-    run_command(f'/root/bin/oci vault secret update-base64 --secret-id {secret_id} '
-                f'--secret-content-content "$(echo {value} | base64)" --auth instance_principal')
+    run_command(
+        f"/root/bin/oci vault secret update-base64 --secret-id {secret_id} "
+        f'--secret-content-content "$(echo {value} | base64)" --auth instance_principal'
+    )
 
 
 def install_oci_cli() -> None:
-    cmd = ("curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/"
-           "install.sh | bash -s -- --accept-all-defaults")
+    cmd = (
+        "curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/"
+        "install.sh | bash -s -- --accept-all-defaults"
+    )
     run_command(cmd, timeout=600)
 
 
@@ -148,9 +159,7 @@ def wait_for_qfsd_installation(cluster_node_ip_addresses: str) -> None:
         while True:
             try:
                 response = requests.get(
-                    f"https://{ip}:8000/v1/node/state",
-                    verify=False,
-                    timeout=60
+                    f"https://{ip}:8000/v1/node/state", verify=False, timeout=60
                 )
                 if response.status_code == 200:
                     logging.info(f"QFSD is up on node {ip}")
@@ -164,21 +173,24 @@ def wait_for_qfsd_installation(cluster_node_ip_addresses: str) -> None:
 
 def get_qfsd_version(ip: str) -> str:
     result = qq_command(f"--host {ip} version")
-    for line in result.stdout.split('\n'):
+    for line in result.stdout.split("\n"):
         if "revision_id" in line:
-            return re.sub(r'[^0-9.]', '', line)
+            return re.sub(r"[^0-9.]", "", line)
     return ""
 
 
 def download_qq_client() -> None:
-    response = requests.get(f"https://{clustering_node_ip_address}/static/qq", verify=False)
+    response = requests.get(
+        f"https://{clustering_node_ip_address}/static/qq", verify=False
+    )
     with open("qq", "wb") as f:
         f.write(response.content)
     os.chmod("qq", 0o777)
 
 
-def survey_node_state(qfsd_version: str, cluster_node_ip_addresses: str) -> Tuple[List[str],
-        List[str]]:
+def survey_node_state(
+    qfsd_version: str, cluster_node_ip_addresses: str
+) -> Tuple[List[str], List[str]]:
     in_quorum_nodes = []
     unconfigured_nodes = []
     out_of_quorum_nodes = []
@@ -187,8 +199,10 @@ def survey_node_state(qfsd_version: str, cluster_node_ip_addresses: str) -> Tupl
         node_version = get_qfsd_version(ip)
 
         if node_version != qfsd_version:
-            raise ProvisioningError(f"Node at {ip} has the wrong qfsd revision {node_version}. "
-                                    f"Please make sure all nodes are at revision {qfsd_version}")
+            raise ProvisioningError(
+                f"Node at {ip} has the wrong qfsd revision {node_version}. "
+                f"Please make sure all nodes are at revision {qfsd_version}"
+            )
 
         try:
             quorum_result = qq_command(f"--host {ip} node_state_get")
@@ -201,8 +215,10 @@ def survey_node_state(qfsd_version: str, cluster_node_ip_addresses: str) -> Tupl
         except ProvisioningError:
             out_of_quorum_nodes.append(ip)
 
-    logging.info(f"{len(unconfigured_nodes)} nodes unconfigured, {len(out_of_quorum_nodes)} nodes "
-                 f"out of quorum, {len(in_quorum_nodes)} nodes in quorum")
+    logging.info(
+        f"{len(unconfigured_nodes)} nodes unconfigured, {len(out_of_quorum_nodes)} nodes "
+        f"out of quorum, {len(in_quorum_nodes)} nodes in quorum"
+    )
 
     return in_quorum_nodes, out_of_quorum_nodes
 
@@ -229,7 +245,7 @@ def apply_initial_floating_ips(flips: List[str], netmask: str) -> None:
 
     logging.info(f"Apply network configuration with floating IPs: {flips_json}")
 
-    network_config = f'''{{
+    network_config = f"""{{
         "frontend_networks": [
             {{
                 "id": 1,
@@ -243,9 +259,11 @@ def apply_initial_floating_ips(flips: List[str], netmask: str) -> None:
                 }}
             }}
         ]
-    }}'''
+    }}"""
 
-    qq_command(f"raw --content-type application/json PUT /v3/network <<< '{network_config}'")
+    qq_command(
+        f"raw --content-type application/json PUT /v3/network <<< '{network_config}'"
+    )
 
     while True:
         try:
@@ -260,8 +278,13 @@ def apply_initial_floating_ips(flips: List[str], netmask: str) -> None:
         time.sleep(10)
 
 
-def maybe_update_floating_ips(clustering_node_ip_address: str, floating_ip_addresses: str, netmask: str, qfsd_version: str) -> None:
-    if not qfsd_version or int(qfsd_version.replace('.', '')[:3]) < 751:
+def maybe_update_floating_ips(
+    clustering_node_ip_address: str,
+    floating_ip_addresses: str,
+    netmask: str,
+    qfsd_version: str,
+) -> None:
+    if not qfsd_version or int(qfsd_version.replace(".", "")[:3]) < 751:
         return
 
     qq_command("network_v3_get_config -o network_config.json")
@@ -272,18 +295,25 @@ def maybe_update_floating_ips(clustering_node_ip_address: str, floating_ip_addre
     new_flips = floating_ip_addresses.split(",") if floating_ip_addresses else []
 
     frontend_networks_length = len(current_config.get("frontend_networks", []))
-    floating_ip_count = (len(current_config["frontend_networks"][0]
-                            .get("addresses", {})
-                            .get("host_addresses", {})
-                            .get("floating_ip_ranges", []))
-                        if frontend_networks_length > 0 else 0)
+    floating_ip_count = (
+        len(
+            current_config["frontend_networks"][0]
+            .get("addresses", {})
+            .get("host_addresses", {})
+            .get("floating_ip_ranges", [])
+        )
+        if frontend_networks_length > 0
+        else 0
+    )
 
     if frontend_networks_length == 0 or floating_ip_count == 0:
         logging.info("No floating IPs configured, applying initial floating IPs")
         apply_initial_floating_ips(new_flips, netmask)
         return
 
-    current_flips = current_config["frontend_networks"][0]["addresses"]["host_addresses"]["floating_ip_ranges"]
+    current_flips = current_config["frontend_networks"][0]["addresses"][
+        "host_addresses"
+    ]["floating_ip_ranges"]
 
     if current_flips != new_flips:
         if not new_flips:
@@ -292,7 +322,9 @@ def maybe_update_floating_ips(clustering_node_ip_address: str, floating_ip_addre
         else:
             new_flips_json = [ip for ip in new_flips]
             logging.info(f"Updating floating IPs to {new_flips_json}")
-            current_config["frontend_networks"][0]["addresses"]["host_addresses"]["floating_ip_ranges"] = new_flips_json
+            current_config["frontend_networks"][0]["addresses"]["host_addresses"][
+                "floating_ip_ranges"
+            ] = new_flips_json
 
         with open("network_config.json", "w") as f:
             json.dump(current_config, f)
@@ -301,19 +333,22 @@ def maybe_update_floating_ips(clustering_node_ip_address: str, floating_ip_addre
         wait_for_new_quorum()
 
 
-def update_cluster_membership(node_count: int, node_ips_and_fault_domains: str,
-                             cluster_node_count_secret_id: str) -> None:
+def update_cluster_membership(
+    node_count: int, node_ips_and_fault_domains: str, cluster_node_count_secret_id: str
+) -> None:
     ips_and_fault_domains = node_ips_and_fault_domains.split()
     new_node_membership = ips_and_fault_domains[:node_count]
 
     args = [
         "modify_object_backed_cluster_membership",
         f"--node-ips-and-fault-domains {' '.join(new_node_membership)}",
-        "--batch"
+        "--batch",
     ]
 
-    logging.info(f"Running cluster membership change command: ./qq --host {clustering_node_ip_address} "
-                 f"{' '.join(args)}")
+    logging.info(
+        f"Running cluster membership change command: ./qq --host {clustering_node_ip_address} "
+        f"{' '.join(args)}"
+    )
     qq_command(" ".join(args))
 
     wait_for_new_quorum()
@@ -323,12 +358,16 @@ def update_cluster_membership(node_count: int, node_ips_and_fault_domains: str,
         try:
             result = qq_command("get_object_backed_nodes")
             node_data = json.loads(result.stdout.replace("'", '"'))
-            current_node_count = len(node_data["membership"]["node_ips_and_fault_domains"])
+            current_node_count = len(
+                node_data["membership"]["node_ips_and_fault_domains"]
+            )
             if current_node_count == node_count:
                 logging.info("New cluster membership in effect")
                 break
-            logging.info(f"Waiting for new cluster membership to take effect. "
-                         f"Current node count {current_node_count}")
+            logging.info(
+                f"Waiting for new cluster membership to take effect. "
+                f"Current node count {current_node_count}"
+            )
         except (ProvisioningError, json.JSONDecodeError, KeyError, IndexError):
             pass
         time.sleep(10)
@@ -341,12 +380,14 @@ def create_cluster(config: ProvisioningConfig) -> None:
     if config.node_count == 0:
         return
 
-    logging.info(f"All of the nodes are out of quorum, forming a new cluster with {config.node_count} nodes.")
+    logging.info(
+        f"All of the nodes are out of quorum, forming a new cluster with {config.node_count} nodes."
+    )
 
     ips_and_fault_domains = config.node_ips_and_fault_domains.split()
     flips = config.floating_ips.split(",") if config.floating_ips else []
 
-    new_nodes = ips_and_fault_domains[:config.node_count]
+    new_nodes = ips_and_fault_domains[: config.node_count]
 
     cluster_create_args = [
         "create_object_backed_cluster",
@@ -354,31 +395,41 @@ def create_cluster(config: ProvisioningConfig) -> None:
         f"--admin-password {config.admin_password}",
         f"--host-instance-id {config.clustering_node_ocid}",
         "--accept-eula",
-        f"--usable-capacity-clamp {config.soft_capacity_limit}TiB",
+        f"--usable-capacity-clamp {config.soft_capacity_limit}TB",
         f"--product-type {config.product_type}",
         f"--object-storage-uris {config.storage_uris}",
         f"--node-ips-and-fault-domains {' '.join(new_nodes)}",
-        f"--key-vault {config.secret_ocid}"
+        f"--key-vault {config.secret_ocid}",
     ]
 
-    logging.info(f"Running cluster create command: ./qq --host {clustering_node_ip_address} "
-                 f"{' '.join(cluster_create_args)}")
+    logging.info(
+        f"Running cluster create command: ./qq --host {clustering_node_ip_address} "
+        f"{' '.join(cluster_create_args)}"
+    )
     qq_command(" ".join(cluster_create_args))
 
     # Record cluster metadata in secrets
     update_secret(config.cluster_node_count_secret_id, str(len(new_nodes)))
-    update_secret(config.deployed_permanent_disk_count_secret_id, config.permanent_disk_count)
-    update_secret(config.cluster_soft_capacity_limit_secret_id, config.soft_capacity_limit)
+    update_secret(
+        config.deployed_permanent_disk_count_secret_id, config.permanent_disk_count
+    )
+    update_secret(
+        config.cluster_soft_capacity_limit_secret_id, config.soft_capacity_limit
+    )
 
     qq_command(f"login -u admin -p {config.admin_password}")
 
     logging.info("Setting s3 object client timeout limit to 10s")
-    qq_command("raw --content-type application/json PUT "
-               "/v1/tunables/s3_object_client_socket_recv_timeout_ms <<< '{\"configured_value\": \"10000\"}'")
+    qq_command(
+        "raw --content-type application/json PUT "
+        '/v1/tunables/s3_object_client_socket_recv_timeout_ms <<< \'{"configured_value": "10000"}\''
+    )
 
     if config.dev_environment == "true":
-        qq_command("set_monitoring_conf --mq-host staging-missionq.qumulo.com "
-                   "--nexus-host api.spog-staging.qumulo.com")
+        qq_command(
+            "set_monitoring_conf --mq-host staging-missionq.qumulo.com "
+            "--nexus-host api.spog-staging.qumulo.com"
+        )
 
     apply_initial_floating_ips(flips, config.netmask)
 
@@ -387,14 +438,24 @@ def create_cluster(config: ProvisioningConfig) -> None:
     wait_for_new_quorum()
 
 
-def handle_existing_cluster(in_quorum_nodes: List[str], config: ProvisioningConfig,
-                          clustering_node_ip_address: str, qfsd_version: str) -> None:
+def handle_existing_cluster(
+    in_quorum_nodes: List[str],
+    config: ProvisioningConfig,
+    clustering_node_ip_address: str,
+    qfsd_version: str,
+) -> None:
     qq_command(f"login -u admin -p {config.admin_password}")
 
     # Node add/remove
     if len(in_quorum_nodes) != config.node_count:
-        logging.info(f"Change the number of nodes in the cluster from {len(in_quorum_nodes)} to {config.node_count}")
-        update_cluster_membership(config.node_count, config.node_ips_and_fault_domains, config.cluster_node_count_secret_id)
+        logging.info(
+            f"Change the number of nodes in the cluster from {len(in_quorum_nodes)} to {config.node_count}"
+        )
+        update_cluster_membership(
+            config.node_count,
+            config.node_ips_and_fault_domains,
+            config.cluster_node_count_secret_id,
+        )
 
     # Bucket add
     current_bucket_result = qq_command("get_object_storage_uris")
@@ -403,41 +464,51 @@ def handle_existing_cluster(in_quorum_nodes: List[str], config: ProvisioningConf
     storage_uris = config.storage_uris.split()
 
     if current_bucket_count < len(storage_uris):
-        logging.info(f"Updating the cluster to use the following buckets: {config.storage_uris}")
+        logging.info(
+            f"Updating the cluster to use the following buckets: {config.storage_uris}"
+        )
         qq_command(f"add_object_storage_uris --uris {config.storage_uris}")
         wait_for_new_quorum()
 
     # Capacity increase
-    cmd = (f"/root/bin/oci secrets secret-bundle get --secret-id "
-           f"{config.cluster_soft_capacity_limit_secret_id} --auth instance_principal")
+    cmd = (
+        f"/root/bin/oci secrets secret-bundle get --secret-id "
+        f"{config.cluster_soft_capacity_limit_secret_id} --auth instance_principal"
+    )
     result = run_command(cmd)
     secret_data = json.loads(result.stdout)
     encoded_content = secret_data["data"]["secret-bundle-content"]["content"]
-    current_capacity_in_tib = base64.b64decode(encoded_content).decode()
+    current_capacity_in_tb = base64.b64decode(encoded_content).decode()
 
-    logging.info(f"Current cluster capacity in TiB: {current_capacity_in_tib}")
-    if int(current_capacity_in_tib) < int(config.soft_capacity_limit):
-        logging.info(f"Increasing cluster capacity to {config.soft_capacity_limit}TiB")
-        qq_command(f"capacity_clamp_set --clamp {config.soft_capacity_limit}TiB")
+    logging.info(f"Current cluster capacity in TB: {current_capacity_in_tb}")
+    if int(current_capacity_in_tb) < int(config.soft_capacity_limit):
+        logging.info(f"Increasing cluster capacity to {config.soft_capacity_limit}TB")
+        qq_command(f"capacity_clamp_set --clamp {config.soft_capacity_limit}TB")
         wait_for_new_quorum()
 
         # Update secret with new capacity
-        update_secret(config.cluster_soft_capacity_limit_secret_id, config.soft_capacity_limit)
+        update_secret(
+            config.cluster_soft_capacity_limit_secret_id, config.soft_capacity_limit
+        )
 
     # Floating IP update on versions >= 7.5.1
-    maybe_update_floating_ips(clustering_node_ip_address, config.floating_ips, config.netmask, qfsd_version)
+    maybe_update_floating_ips(
+        clustering_node_ip_address, config.floating_ips, config.netmask, qfsd_version
+    )
 
 
 def shutdown_instance() -> None:
     instance_metadata = requests.get(
         "http://169.254.169.254/opc/v2/instance/",
         headers={"Authorization": "Bearer Oracle"},
-        timeout=30
+        timeout=30,
     )
     instance_id = instance_metadata.json()["id"]
 
-    run_command(f"/root/bin/oci compute instance action --instance-id {instance_id} "
-                f"--action STOP --auth instance_principal")
+    run_command(
+        f"/root/bin/oci compute instance action --instance-id {instance_id} "
+        f"--action STOP --auth instance_principal"
+    )
 
 
 def main() -> None:
@@ -445,7 +516,7 @@ def main() -> None:
         filename="/var/log/qumulo.log",
         level=logging.INFO,
         format="%(message)s",
-        filemode="a"
+        filemode="a",
     )
 
     logging.info("Starting QProvisioner provisioning")
@@ -456,18 +527,24 @@ def main() -> None:
     download_qq_client()
 
     qfsd_version = get_qfsd_version(clustering_node_ip_address)
-    in_quorum_nodes, out_of_quorum_nodes = survey_node_state(qfsd_version, cluster_node_ip_addresses)
+    in_quorum_nodes, out_of_quorum_nodes = survey_node_state(
+        qfsd_version, cluster_node_ip_addresses
+    )
 
     if out_of_quorum_nodes:
-        raise ProvisioningError(f"Found out of quorum nodes at IPs {out_of_quorum_nodes}, "
-                                f"abort operation. Please come back when the cluster is in a healthy state")
+        raise ProvisioningError(
+            f"Found out of quorum nodes at IPs {out_of_quorum_nodes}, "
+            f"abort operation. Please come back when the cluster is in a healthy state"
+        )
 
     config = create_provisioning_config()
 
     if not in_quorum_nodes:
         create_cluster(config)
     else:
-        handle_existing_cluster(in_quorum_nodes, config, clustering_node_ip_address, qfsd_version)
+        handle_existing_cluster(
+            in_quorum_nodes, config, clustering_node_ip_address, qfsd_version
+        )
 
     logging.info("QProvisioner provisioning completed successfully")
     shutdown_instance()

@@ -43,7 +43,7 @@ variable "node_count" {
 }
 
 variable "soft_capacity_limit" {
-  description = "The soft capacity limit of the qumulo cluster, in TiB"
+  description = "The soft capacity limit of the qumulo cluster, in TB"
   type        = number
 }
 
