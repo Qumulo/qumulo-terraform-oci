@@ -27,7 +27,7 @@ The deployment creates the following components:
       B. Precreated User, Group, and Identity Policy
       * User with a created Customer Secret Key
       * Group that includes this user
-      * Identity Poclicy that includes the statements:
+      * Identity Poclicy that includes the statement:
       ```
           "Allow group <group created above> to manage object-family in compartment id <cluster deployment compartment> where target.bucket.name = <bucket-prefix in output from persistent storage terraform stack>-bucket-*/"
       ```
