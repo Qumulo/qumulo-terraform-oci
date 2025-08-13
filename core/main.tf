@@ -73,6 +73,8 @@ resource "null_resource" "name_lock" {
 
 locals {
   cluster_email          = "${local.deployment_unique_name}-user@qumulo.com"
+  qumulo_core_rpm_bucket_name = (var.qumulo_core_rpm_path != null) ?  var.persistent_storage.bucket[0].name : ""
+  qumulo_core_rpm_object_name = (var.qumulo_core_rpm_path != null) ?  oci_objectstorage_object.qumulo_core[0].object : ""
   qumulo_core_object_uri = (var.qumulo_core_rpm_url != null) ? var.qumulo_core_rpm_url : "https://objectstorage.${var.persistent_storage.bucket_region}.oraclecloud.com${oci_objectstorage_preauthrequest.qumulo_core[0].access_uri}"
   deployment_unique_name = null_resource.name_lock.triggers.deployment_unique_name
 }
@@ -156,7 +158,7 @@ resource "oci_identity_policy" "subnet_policy" {
   freeform_tags  = var.freeform_tags
 
   statements = [
-    "Allow dynamic-group ${oci_identity_dynamic_group.instance_dynamic_group[0].name} to manage virtual-network-family in compartment id ${data.oci_core_subnet.cluster_subnet.compartment_id}",
+    "Allow dynamic-group ${oci_identity_dynamic_group.instance_dynamic_group[0].name} to use virtual-network-family in compartment id ${data.oci_core_subnet.cluster_subnet.compartment_id}",
   ]
 }
 
@@ -358,6 +360,8 @@ module "qprovisioner" {
   cluster_node_count_secret_id            = oci_vault_secret.cluster_node_count.id
   deployed_permanent_disk_count_secret_id = oci_vault_secret.deployed_permanent_disk_count.id
   cluster_soft_capacity_limit_secret_id   = oci_vault_secret.cluster_soft_capacity_limit.id
+  qumulo_core_rpm_bucket_name     = local.qumulo_core_rpm_bucket_name
+  qumulo_core_rpm_object_name     = local.qumulo_core_rpm_object_name
 
   dev_environment = var.dev_environment
   defined_tags    = var.defined_tags
