@@ -156,7 +156,7 @@ resource "oci_identity_policy" "subnet_policy" {
   freeform_tags  = var.freeform_tags
 
   statements = [
-    "Allow dynamic-group ${oci_identity_dynamic_group.instance_dynamic_group[0].name} to manage virtual-network-family in compartment id ${data.oci_core_subnet.cluster_subnet.compartment_id}",
+    "Allow dynamic-group ${oci_identity_dynamic_group.instance_dynamic_group[0].name} to use virtual-network-family in compartment id ${data.oci_core_subnet.cluster_subnet.compartment_id}",
   ]
 }
 
