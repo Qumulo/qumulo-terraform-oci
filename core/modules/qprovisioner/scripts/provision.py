@@ -47,8 +47,8 @@ import requests
 # Template variables (replaced by Terraform templatefile)
 cluster_node_ip_addresses = "${cluster_node_ip_addresses}"
 clustering_node_ip_address = "${clustering_node_ip_address}"
-qumulo_core_rpm_bucket_name="${qumulo_core_rpm_bucket_name}"
-qumulo_core_rpm_object_name="${qumulo_core_rpm_object_name}"
+qumulo_core_rpm_bucket_name = "${qumulo_core_rpm_bucket_name}"
+qumulo_core_rpm_object_name = "${qumulo_core_rpm_object_name}"
 
 
 @dataclass
