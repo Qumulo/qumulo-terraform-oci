@@ -114,11 +114,6 @@ resource "oci_objectstorage_bucket" "bucket" {
   freeform_tags  = var.freeform_tags
   defined_tags   = length(var.defined_tags) > 0 ? var.defined_tags : null
 
-  provisioner "local-exec" {
-    when    = destroy
-    command = "oci os object bulk-delete --namespace-name ${self.namespace} --bucket-name ${self.name} --force"
-  }
-
   lifecycle {
     ignore_changes = [compartment_id, name, namespace]
 
