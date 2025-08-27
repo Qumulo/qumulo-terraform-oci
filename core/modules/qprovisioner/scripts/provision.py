@@ -516,7 +516,11 @@ def signal_complete(config: ProvisioningConfig) -> None:
     update_secret(config.provisioner_complete_secret_id, 'true')
 
 
-def shutdown_instance() -> None:
+def shutdown_instance(config: ProvisioningConfig) -> None:
+    if config.dev_environment == "true":
+        # Skip shutting down the provisioner for dev environments so we can gather provisioner logs.
+        return
+
     instance_metadata = requests.get(
         "http://169.254.169.254/opc/v2/instance/",
         headers={"Authorization": "Bearer Oracle"},
@@ -568,7 +572,7 @@ def main() -> None:
 
     logging.info("QProvisioner provisioning completed successfully")
     signal_complete(config)
-    shutdown_instance()
+    shutdown_instance(config)
 
 
 if __name__ == "__main__":
