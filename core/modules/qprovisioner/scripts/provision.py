@@ -76,6 +76,7 @@ class ProvisioningConfig:
     cluster_node_count_secret_id: str
     deployed_permanent_disk_count_secret_id: str
     cluster_soft_capacity_limit_secret_id: str
+    provisioner_complete_secret_id: str
 
     # Deployment settings
     dev_environment: str
@@ -99,6 +100,7 @@ def create_provisioning_config() -> ProvisioningConfig:
         netmask="${netmask}",
         secret_ocid="${secret_ocid}",
         cluster_node_count_secret_id="${cluster_node_count_secret_id}",
+        provisioner_complete_secret_id="${provisioner_complete_secret_id}",
         deployed_permanent_disk_count_secret_id="${deployed_permanent_disk_count_secret_id}",
         cluster_soft_capacity_limit_secret_id="${cluster_soft_capacity_limit_secret_id}",
     )
@@ -510,6 +512,10 @@ def handle_existing_cluster(
     )
 
 
+def signal_complete(config: ProvisioningConfig) -> None:
+    update_secret(config.provisioner_complete_secret_id, 'true')
+
+
 def shutdown_instance() -> None:
     instance_metadata = requests.get(
         "http://169.254.169.254/opc/v2/instance/",
@@ -561,6 +567,7 @@ def main() -> None:
         )
 
     logging.info("QProvisioner provisioning completed successfully")
+    signal_complete(config)
     shutdown_instance()
 
 

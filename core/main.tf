@@ -286,6 +286,21 @@ resource "oci_vault_secret" "customer_secret_key_secret" {
   }
 }
 
+resource "oci_vault_secret" "provisioner_complete" {
+  compartment_id = var.compartment_ocid
+  key_id         = local.vault_key_ocid
+  secret_name    = "${local.deployment_unique_name}-provisioner-complete"
+  vault_id       = local.vault.id
+  defined_tags   = length(var.defined_tags) > 0 ? var.defined_tags : null
+  freeform_tags  = var.freeform_tags
+
+  # This value is set on every terraform run until the provisioner sets it to "true"
+  secret_content {
+    content_type = "base64"
+    content      = base64encode(jsonencode(false))
+  }
+}
+
 data "oci_core_subnet" "subnet" {
   subnet_id = var.subnet_ocid
 }
@@ -360,6 +375,7 @@ module "qprovisioner" {
   cluster_node_count_secret_id            = oci_vault_secret.cluster_node_count.id
   deployed_permanent_disk_count_secret_id = oci_vault_secret.deployed_permanent_disk_count.id
   cluster_soft_capacity_limit_secret_id   = oci_vault_secret.cluster_soft_capacity_limit.id
+  provisioner_complete_secret_id          = oci_vault_secret.provisioner_complete.id
   qumulo_core_rpm_bucket_name             = local.qumulo_core_rpm_bucket_name
   qumulo_core_rpm_object_name             = local.qumulo_core_rpm_object_name
 

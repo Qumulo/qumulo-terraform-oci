@@ -23,16 +23,23 @@
 # SOFTWARE.
 #
 
-instance_id="${instance_id}"
+secret_id="${secret_id}"
 
 max_retries=30
 count=0
 
-until [ "$(oci compute instance get --instance-id "$instance_id" | jq -r '.data["lifecycle-state"]')" == "STOPPED" ];  do
+while true; do
     if [ $count -gt $max_retries ]; then
         echo "Cluster Provisioning FAILED"
         echo "Review /var/log/qumulo.log on the provisioner instance to troubleshoot"
         exit 1
+    fi
+
+    contents="$(oci secrets secret-bundle get --secret-id $secret_id)"
+    value="$(echo $contents | jq '.data["secret-bundle-content"].content' -r | base64 -d)"
+
+    if [ "$value" == "true" ]; then
+        break;
     fi
 
     echo "Waiting for provisioning to complete"
