@@ -152,6 +152,11 @@ variable "cluster_soft_capacity_limit_secret_id" {
   type        = string
 }
 
+variable "provisioner_complete_secret_id" {
+  description = "The id of the vault secret in which we store whether the provisioner has completed or not."
+  type        = string
+}
+
 variable "qumulo_core_rpm_bucket_name" {
   description = "The bucket name of the RPM used to install Qumulo Core on the nodes, for the purpose of cleaning up the object before creating the cluster."
   type        = string

@@ -24,5 +24,5 @@
 
 locals {
   provision_script_path         = "${path.module}/scripts/provision.py"
-  wait_for_shutdown_script_path = "${path.module}/scripts/wait_for_shutdown.sh"
+  wait_for_completion_script_path = "${path.module}/scripts/wait_for_completion.sh"
 }

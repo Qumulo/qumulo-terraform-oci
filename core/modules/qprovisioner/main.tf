@@ -75,6 +75,7 @@ resource "oci_core_instance" "provisioner" {
       cluster_node_count_secret_id            = var.cluster_node_count_secret_id
       deployed_permanent_disk_count_secret_id = var.deployed_permanent_disk_count_secret_id
       cluster_soft_capacity_limit_secret_id   = var.cluster_soft_capacity_limit_secret_id
+      provisioner_complete_secret_id          = var.provisioner_complete_secret_id
       qumulo_core_rpm_bucket_name             = var.qumulo_core_rpm_bucket_name
       qumulo_core_rpm_object_name             = var.qumulo_core_rpm_object_name
       dev_environment                         = var.dev_environment
@@ -92,11 +93,11 @@ resource "oci_core_instance" "provisioner" {
   }
 }
 
-resource "null_resource" "wait_for_shutdown" {
+resource "null_resource" "wait_for_completion" {
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
-    command = templatefile(local.wait_for_shutdown_script_path, {
-      instance_id = oci_core_instance.provisioner.id
+    command = templatefile(local.wait_for_completion_script_path, {
+      secret_id = var.provisioner_complete_secret_id
     })
     quiet = true
   }
