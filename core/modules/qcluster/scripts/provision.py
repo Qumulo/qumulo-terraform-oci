@@ -26,7 +26,7 @@
 """
 QCluster Node Provisioning Script
 
-This script configures Qumulo cluster nodes during VM initialization on Oracle Cloud 
+This script configures Qumulo cluster nodes during VM initialization on Oracle Cloud
 Infrastructure (OCI). It performs the following operations:
 - Extends the boot drive filesystem
 - Installs required system packages
@@ -36,19 +36,20 @@ Infrastructure (OCI). It performs the following operations:
 - Verifies access to object storage buckets
 - Downloads and installs Qumulo Core software
 
-The script is executed via cloud-init user_data during VM startup and logs all output 
+The script is executed via cloud-init user_data during VM startup and logs all output
 to /var/log/qumulo.log. Variables are provided by Terraform templatefile substitution.
 """
 
 import logging
 import os
 import re
+import requests
 import shutil
 import subprocess
 import time
 
 from pathlib import Path
-from typing import Optional
+from typing import Dict, List, Optional
 
 # Template variables (replaced by Terraform templatefile)
 qumulo_core_uri = "${qumulo_core_uri}"
@@ -176,32 +177,35 @@ def disable_conflicting_services() -> None:
         logging.warning(f"sysctl --system failed: {e}")
 
 
+def get_vnic_metadata() -> List[Dict[str, str]]:
+    headers = {'Authorization': 'Bearer Oracle'}
+    response = requests.get('http://169.254.169.254/opc/v2/vnics/', headers=headers)
+    return response.json()
+
+
 def create_qumulo_service() -> None:
-    service_content = """
-[Unit]
-Description=Add altname for ens3
+    try:
+        systemd_network = Path("/etc/systemd/network")
+        systemd_network.mkdir(parents=True, exist_ok=True)
 
-[Service]
-ExecStart=/sbin/ip link property add dev ens3 altname qumulo-frontend1
-Type=oneshot
-RemainAfterExit=yes
+        vnic_metadata = get_vnic_metadata()
+        mac_address = vnic_metadata[0]['macAddr']
 
-[Install]
-WantedBy=multi-user.target
+        link_content = f"""
+[Match]
+MACAddress={mac_address}
+
+[Link]
+AlternativeName=qumulo-frontend1
 """
 
-    try:
-        systemd_system = Path("/etc/systemd/system")
-        systemd_system.mkdir(parents=True, exist_ok=True)
+        link_unit = systemd_network / "10-qumulo-frontend-link-altname.link"
+        link_unit.write_text(link_content)
+        link_unit.chmod(0o644)
 
-        qumulo_service = systemd_system / "qumulo-frontend-link-altname.service"
-        qumulo_service.write_text(service_content)
-        qumulo_service.chmod(0o644)
-
-        run_command("systemctl daemon-reload", timeout=TIMEOUT_SERVICE_OP)
+        # Trigger a udev "add" event to force the altname to be aplied
         run_command(
-            "systemctl enable --now qumulo-frontend-link-altname.service",
-            timeout=TIMEOUT_SERVICE_OP,
+            "udevadm trigger -c add", timeout=TIMEOUT_SERVICE_OP,
         )
 
         logging.info("Created and enabled Qumulo frontend link service")
