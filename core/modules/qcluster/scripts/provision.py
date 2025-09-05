@@ -76,7 +76,12 @@ def run_command(
 ) -> subprocess.CompletedProcess:
     try:
         result = subprocess.run(
-            cmd, shell=True, check=check, capture_output=True, text=True, timeout=timeout
+            cmd,
+            shell=True,
+            check=check,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
         )
         if result.stdout.strip():
             logging.info(result.stdout.strip())
@@ -110,7 +115,9 @@ def install_package_with_retry(package_name: str) -> None:
 
     for attempt in range(1, 6):
         try:
-            run_command(f"dnf install -y {package_name}", timeout=TIMEOUT_PACKAGE_INSTALL)
+            run_command(
+                f"dnf install -y {package_name}", timeout=TIMEOUT_PACKAGE_INSTALL
+            )
             logging.info(f"Successfully installed {package_name}")
             return
         except (ProvisioningError, TimeoutError):
@@ -118,7 +125,9 @@ def install_package_with_retry(package_name: str) -> None:
                 error_msg = f"Failed to install {package_name} after 5 attempts"
                 raise ProvisioningError(error_msg)
 
-            logging.warning(f"Could not get lock, retrying in 10 seconds... (Attempt: {attempt})")
+            logging.warning(
+                f"Could not get lock, retrying in 10 seconds... (Attempt: {attempt})"
+            )
             time.sleep(10)
 
 
@@ -127,7 +136,9 @@ def configure_selinux() -> None:
         selinux_config = Path("/etc/selinux/config")
         if selinux_config.exists():
             content = selinux_config.read_text()
-            content = re.sub(r"^SELINUX=.*", "SELINUX=permissive", content, flags=re.MULTILINE)
+            content = re.sub(
+                r"^SELINUX=.*", "SELINUX=permissive", content, flags=re.MULTILINE
+            )
             selinux_config.write_text(content)
         else:
             logging.warning("/etc/selinux/config doesn't exist, skipping")
@@ -178,8 +189,8 @@ def disable_conflicting_services() -> None:
 
 
 def get_vnic_metadata() -> List[Dict[str, str]]:
-    headers = {'Authorization': 'Bearer Oracle'}
-    response = requests.get('http://169.254.169.254/opc/v2/vnics/', headers=headers)
+    headers = {"Authorization": "Bearer Oracle"}
+    response = requests.get("http://169.254.169.254/opc/v2/vnics/", headers=headers)
     return response.json()
 
 
@@ -189,7 +200,7 @@ def create_qumulo_service() -> None:
         systemd_network.mkdir(parents=True, exist_ok=True)
 
         vnic_metadata = get_vnic_metadata()
-        mac_address = vnic_metadata[0]['macAddr']
+        mac_address = vnic_metadata[0]["macAddr"]
 
         link_content = f"""
 [Match]
@@ -205,7 +216,8 @@ AlternativeName=qumulo-frontend1
 
         # Trigger a udev "add" event to force the altname to be aplied
         run_command(
-            "udevadm trigger -c add", timeout=TIMEOUT_SERVICE_OP,
+            "udevadm trigger -c add",
+            timeout=TIMEOUT_SERVICE_OP,
         )
 
         logging.info("Created and enabled Qumulo frontend link service")
@@ -275,7 +287,9 @@ def verify_object_storage_access() -> None:
     )
     time.sleep(object_storage_access_delay)
 
-    os.environ.update({"AWS_ACCESS_KEY_ID": access_key_id, "AWS_SECRET_ACCESS_KEY": secret_key})
+    os.environ.update(
+        {"AWS_ACCESS_KEY_ID": access_key_id, "AWS_SECRET_ACCESS_KEY": secret_key}
+    )
 
     uri_list = object_storage_uris.split()
     for uri in uri_list:
@@ -293,13 +307,17 @@ def download_and_install_qumulo() -> None:
 
     try:
         qumulo_rpm = Path("/tmp/qumulo-core.rpm")
-        run_command(f'curl -L -o {qumulo_rpm} "{qumulo_core_uri}"', timeout=TIMEOUT_DOWNLOAD)
+        run_command(
+            f'curl -L -o {qumulo_rpm} "{qumulo_core_uri}"', timeout=TIMEOUT_DOWNLOAD
+        )
 
         logging.info("Installing Qumulo Core")
 
         run_command(f"dnf install -y {qumulo_rpm}", timeout=TIMEOUT_PACKAGE_INSTALL)
 
-        result = run_command("dnf list installed | grep qumulo-core", check=False, timeout=30)
+        result = run_command(
+            "dnf list installed | grep qumulo-core", check=False, timeout=30
+        )
 
         if result.returncode == 0:
             logging.info("Qumulo Core installed successfully")
@@ -314,7 +332,10 @@ def download_and_install_qumulo() -> None:
 
 def main() -> None:
     logging.basicConfig(
-        filename="/var/log/qumulo.log", level=logging.INFO, format="%(message)s", filemode="a"
+        filename="/var/log/qumulo.log",
+        level=logging.INFO,
+        format="%(message)s",
+        filemode="a",
     )
 
     # Validate required variables early to fail fast
