@@ -182,7 +182,7 @@ def clean_up_qumulo_core_rpm(bucket_name: str, object_name: str) -> None:
         run_command(
             f'/root/bin/oci os object delete --bucket-name "{bucket_name}" --object-name "{object_name}"'
             "--auth instance_principal",
-            check=False
+            check=False,
         )
 
 
@@ -513,7 +513,7 @@ def handle_existing_cluster(
 
 
 def signal_complete(config: ProvisioningConfig) -> None:
-    update_secret(config.provisioner_complete_secret_id, 'true')
+    update_secret(config.provisioner_complete_secret_id, "true")
 
 
 def shutdown_instance(config: ProvisioningConfig) -> None:
@@ -538,7 +538,7 @@ def main() -> None:
     logging.basicConfig(
         filename="/var/log/qumulo.log",
         level=logging.INFO,
-        format="%(message)s",
+        format="%(asctime)s - %(levelname)s - %(message)s",
         filemode="a",
     )
 
