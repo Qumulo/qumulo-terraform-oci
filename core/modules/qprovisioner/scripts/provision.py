@@ -538,7 +538,7 @@ def main() -> None:
     logging.basicConfig(
         filename="/var/log/qumulo.log",
         level=logging.INFO,
-        format="%(message)s",
+        format="%(asctime)s - %(levelname)s - %(message)s",
         filemode="a",
     )
 
