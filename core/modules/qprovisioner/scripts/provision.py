@@ -181,7 +181,7 @@ def clean_up_qumulo_core_rpm(bucket_name: str, object_name: str) -> None:
         # If the object does not exist in the bucket, don't let that fail provisioning. If it fails
         # to be deleted, qfsd will catch it later when the cluster is formed.
         run_command(
-            f'/root/bin/oci os object delete --bucket-name "{bucket_name}" --object-name "{object_name}"'
+            f'yes | /root/bin/oci os object delete --bucket-name "{bucket_name}" --object-name "{object_name}"'
             "--auth instance_principal",
         )
 
