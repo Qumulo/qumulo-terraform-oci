@@ -72,13 +72,14 @@ class TimeoutError(ProvisioningError):
 
 
 def run_command(
-    cmd: str, timeout: Optional[int] = None, check: bool = True
+    cmd: str,
+    timeout: Optional[int] = None,
 ) -> subprocess.CompletedProcess:
     try:
         result = subprocess.run(
             cmd,
             shell=True,
-            check=check,
+            check=True,
             capture_output=True,
             text=True,
             timeout=timeout,
@@ -262,7 +263,7 @@ def verify_object_storage_access() -> None:
                 f'--region "{region}" s3 ls "s3://{bucket_name}" --debug'
             )
 
-            result = run_command(cmd, check=False, timeout=timeout)
+            result = run_command(cmd, timeout=timeout)
 
             if result.returncode == 0:
                 logging.info(f"Customer secret key has access to {uri}")
@@ -315,9 +316,7 @@ def download_and_install_qumulo() -> None:
 
         run_command(f"dnf install -y {qumulo_rpm}", timeout=TIMEOUT_PACKAGE_INSTALL)
 
-        result = run_command(
-            "dnf list installed | grep qumulo-core", check=False, timeout=30
-        )
+        result = run_command("dnf list installed | grep qumulo-core", timeout=30)
 
         if result.returncode == 0:
             logging.info("Qumulo Core installed successfully")

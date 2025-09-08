@@ -111,13 +111,14 @@ class ProvisioningError(Exception):
 
 
 def run_command(
-    cmd: str, timeout: Optional[int] = None, check: bool = True
+    cmd: str,
+    timeout: Optional[int] = None,
 ) -> subprocess.CompletedProcess:
     try:
         result = subprocess.run(
             cmd,
             shell=True,
-            check=check,
+            check=True,
             capture_output=True,
             text=True,
             timeout=timeout,
@@ -182,7 +183,6 @@ def clean_up_qumulo_core_rpm(bucket_name: str, object_name: str) -> None:
         run_command(
             f'/root/bin/oci os object delete --bucket-name "{bucket_name}" --object-name "{object_name}"'
             "--auth instance_principal",
-            check=False,
         )
 
 
