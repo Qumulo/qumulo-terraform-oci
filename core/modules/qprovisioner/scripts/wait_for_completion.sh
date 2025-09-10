@@ -47,3 +47,7 @@ while true; do
     sleep 30
 done
 echo "Cluster provisioning complete"
+
+oci vault secret update-base64 \
+    --secret-id $secret_id \
+    --secret-content-content "$(echo -n false | base64)"

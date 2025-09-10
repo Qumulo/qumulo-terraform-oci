@@ -42,24 +42,6 @@ locals {
   vault = data.oci_kms_vault.deployment_vault
 }
 
-resource "oci_objectstorage_object" "qumulo_core" {
-  count     = (var.qumulo_core_rpm_path != null) ? 1 : 0
-  bucket    = var.persistent_storage.bucket[0].name
-  source    = var.qumulo_core_rpm_path
-  namespace = var.persistent_storage.oci_objectstorage_namespace
-  object    = "qumulo-core.rpm"
-}
-
-resource "oci_objectstorage_preauthrequest" "qumulo_core" {
-  count        = (var.qumulo_core_rpm_path != null) ? 1 : 0
-  access_type  = "ObjectRead"
-  bucket       = var.persistent_storage.bucket[0].name
-  object_name  = oci_objectstorage_object.qumulo_core[0].object
-  name         = "qumulo_core access"
-  namespace    = var.persistent_storage.oci_objectstorage_namespace
-  time_expires = timeadd(timestamp(), "5h")
-}
-
 resource "random_uuid" "deployment_id" {
 }
 
@@ -72,11 +54,8 @@ resource "null_resource" "name_lock" {
 }
 
 locals {
-  cluster_email               = "${local.deployment_unique_name}-user@qumulo.com"
-  qumulo_core_rpm_bucket_name = (var.qumulo_core_rpm_path != null) ? var.persistent_storage.bucket[0].name : ""
-  qumulo_core_rpm_object_name = (var.qumulo_core_rpm_path != null) ? oci_objectstorage_object.qumulo_core[0].object : ""
-  qumulo_core_object_uri      = (var.qumulo_core_rpm_url != null) ? var.qumulo_core_rpm_url : "https://objectstorage.${var.persistent_storage.bucket_region}.oraclecloud.com${oci_objectstorage_preauthrequest.qumulo_core[0].access_uri}"
-  deployment_unique_name      = null_resource.name_lock.triggers.deployment_unique_name
+  cluster_email          = "${local.deployment_unique_name}-user@qumulo.com"
+  deployment_unique_name = null_resource.name_lock.triggers.deployment_unique_name
 }
 
 resource "oci_identity_user" "cluster_user" {
@@ -326,7 +305,7 @@ module "qcluster" {
   node_ssh_public_key_paths   = var.node_ssh_public_key_paths
   node_ssh_public_key_strings = var.node_ssh_public_key_strings
 
-  qumulo_core_object_uri = local.qumulo_core_object_uri
+  qumulo_core_object_uri = var.qumulo_core_rpm_url
 
   availability_domain = var.availability_domain
 
@@ -376,8 +355,6 @@ module "qprovisioner" {
   deployed_permanent_disk_count_secret_id = oci_vault_secret.deployed_permanent_disk_count.id
   cluster_soft_capacity_limit_secret_id   = oci_vault_secret.cluster_soft_capacity_limit.id
   provisioner_complete_secret_id          = oci_vault_secret.provisioner_complete.id
-  qumulo_core_rpm_bucket_name             = local.qumulo_core_rpm_bucket_name
-  qumulo_core_rpm_object_name             = local.qumulo_core_rpm_object_name
 
   dev_environment = var.dev_environment
   defined_tags    = var.defined_tags

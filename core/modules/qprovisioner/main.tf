@@ -76,8 +76,6 @@ resource "oci_core_instance" "provisioner" {
       deployed_permanent_disk_count_secret_id = var.deployed_permanent_disk_count_secret_id
       cluster_soft_capacity_limit_secret_id   = var.cluster_soft_capacity_limit_secret_id
       provisioner_complete_secret_id          = var.provisioner_complete_secret_id
-      qumulo_core_rpm_bucket_name             = var.qumulo_core_rpm_bucket_name
-      qumulo_core_rpm_object_name             = var.qumulo_core_rpm_object_name
       dev_environment                         = var.dev_environment
     }))
     "ssh_authorized_keys" = join("\n", local.ssh_public_key_contents)

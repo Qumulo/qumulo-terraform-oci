@@ -44,7 +44,6 @@ module "core" {
   assign_public_ip                         = var.assign_public_ip
   block_volume_count                       = var.block_volume_count
   vault_ocid                               = var.vault_ocid
-  qumulo_core_rpm_path                     = var.qumulo_core_rpm_path
   qumulo_core_rpm_url                      = var.qumulo_core_rpm_url
   q_cluster_admin_password                 = var.q_cluster_admin_password
   q_cluster_floating_ips                   = var.q_cluster_floating_ips
