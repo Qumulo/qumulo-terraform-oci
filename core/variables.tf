@@ -187,24 +187,10 @@ variable "vault_ocid" {
   }
 }
 
-variable "qumulo_core_rpm_path" {
-  description = "The local path to the qumulo-core.rpm file for the version of Qumulo you want to install."
-  type        = string
-  nullable    = true
-
-  validation {
-    condition = (
-      (var.qumulo_core_rpm_path == null && var.qumulo_core_rpm_url != null) ||
-      (var.qumulo_core_rpm_path != null && var.qumulo_core_rpm_url == null)
-    )
-    error_message = "Exactly one of qumulo_core_rpm_path or qumulo_core_rpm_url must be set."
-  }
-}
-
 variable "qumulo_core_rpm_url" {
   description = "A URL accessible to the instances pointing to the qumulo-core.rpm object for the version of Qumulo you want to install."
   type        = string
-  nullable    = true
+  nullable    = false
 }
 
 variable "q_cluster_admin_password" {

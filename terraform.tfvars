@@ -10,7 +10,8 @@
 # q_cluster_admin_password     - Minumum 8 characters and must include one each of: uppercase, lowercase, and a special character.  If replacing a cluster make sure this password matches current running cluster.
 # node_ssh_public_key_paths    - List of paths to the pre-created admin public key files that should be installed on the OCI virtual machines running Qumulo
 # node_ssh_public_key_strings  - List of pre-created admin public keys that should be installed on the OCI virtual machines running Qumulo
-#  node_ssh_public_key_paths and node_ssh_public_key_strings can be used together or separately, but at least one must be set.
+# node_ssh_public_key_paths and node_ssh_public_key_strings can be used together or separately, but at least one must be set.
+# qumulo_core_rpm_url          - URL to object storing a qumulo-qcore.rpm file
 
 region                      = "my_region"
 availability_domain         = null
@@ -22,13 +23,7 @@ q_cluster_name              = "my_cluster"
 q_cluster_admin_password    = "my_password"
 node_ssh_public_key_paths   = ["my_public_key_file_path", ]
 node_ssh_public_key_strings = ["my_public_key_string", ]
-
-# Set exactly one of the following variables:
-# qumulo_core_rpm_path      - Local path to the downloaded qumulo-qcore.rpm file.
-# qumulo_core_rpm_url       - URL to object storing a qumulo-qcore.rpm file
-
-qumulo_core_rpm_path = "my_rpm_path"
-qumulo_core_rpm_url  = null
+qumulo_core_rpm_url         = "my_rpm_url"
 
 #
 # ****************************** Advanced Configurations **********************************************

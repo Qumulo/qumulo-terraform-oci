@@ -40,15 +40,12 @@ import re
 import subprocess
 import time
 from dataclasses import dataclass
-from pathlib import Path
-from typing import List, Dict, Optional, Tuple
+from typing import List, Optional, Tuple
 import requests
 
 # Template variables (replaced by Terraform templatefile)
 cluster_node_ip_addresses = "${cluster_node_ip_addresses}"
 clustering_node_ip_address = "${clustering_node_ip_address}"
-qumulo_core_rpm_bucket_name = "${qumulo_core_rpm_bucket_name}"
-qumulo_core_rpm_object_name = "${qumulo_core_rpm_object_name}"
 
 
 @dataclass
@@ -174,16 +171,6 @@ def wait_for_qfsd_installation(cluster_node_ip_addresses: str) -> None:
 
             logging.info(f"Waiting for QFSD to be up and running on node {ip}")
             time.sleep(10)
-
-
-def clean_up_qumulo_core_rpm(bucket_name: str, object_name: str) -> None:
-    if bucket_name != "" and object_name != "":
-        # If the object does not exist in the bucket, don't let that fail provisioning. If it fails
-        # to be deleted, qfsd will catch it later when the cluster is formed.
-        run_command(
-            f'/root/bin/oci os object delete --bucket-name "{bucket_name}" --object-name "{object_name}"'
-            "--auth instance_principal",
-        )
 
 
 def get_qfsd_version(ip: str) -> str:
@@ -547,7 +534,6 @@ def main() -> None:
     os.chdir("/root")
     install_oci_cli()
     wait_for_qfsd_installation(cluster_node_ip_addresses)
-    clean_up_qumulo_core_rpm(qumulo_core_rpm_bucket_name, qumulo_core_rpm_object_name)
     download_qq_client()
 
     qfsd_version = get_qfsd_version(clustering_node_ip_address)

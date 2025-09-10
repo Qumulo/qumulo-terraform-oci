@@ -157,16 +157,6 @@ variable "provisioner_complete_secret_id" {
   type        = string
 }
 
-variable "qumulo_core_rpm_bucket_name" {
-  description = "The bucket name of the RPM used to install Qumulo Core on the nodes, for the purpose of cleaning up the object before creating the cluster."
-  type        = string
-}
-
-variable "qumulo_core_rpm_object_name" {
-  description = "The object name of the RPM used to install Qumulo Core on the nodes, for the purpose of cleaning up the object before creating the cluster."
-  type        = string
-}
-
 variable "defined_tags" {
   description = "Defined tags to apply to all resources. Should be in the format { \"namespace.key\" = \"value\" }"
   type        = map(string)
