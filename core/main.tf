@@ -283,6 +283,21 @@ resource "oci_vault_secret" "provisioner_complete" {
 data "oci_core_subnet" "subnet" {
   subnet_id = var.subnet_ocid
 }
+
+data "oci_core_images" "latest" {
+  compartment_id           = var.compartment_ocid
+  operating_system         = "Oracle Linux"
+  operating_system_version = "9"
+  shape                    = var.node_instance_shape
+  state                    = "AVAILABLE"
+  sort_by                  = "DISPLAYNAME"
+  sort_order               = "DESC"
+}
+
+locals {
+  node_base_image = var.node_base_image != null ? var.node_base_image : data.oci_core_images.latest.images[0].id
+}
+
 module "qcluster" {
   source = "./modules/qcluster"
 
@@ -300,6 +315,7 @@ module "qcluster" {
 
   node_instance_shape = var.node_instance_shape
   node_instance_ocpus = var.node_instance_ocpus
+  node_base_image     = local.node_base_image
   assign_public_ip    = var.assign_public_ip
 
   node_ssh_public_key_paths   = var.node_ssh_public_key_paths
