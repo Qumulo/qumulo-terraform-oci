@@ -160,6 +160,12 @@ variable "node_instance_ocpus" {
   default     = 8
 }
 
+variable "node_base_image" {
+  description = "The OCID of the image used to launch node instances. Must be compatible with the chosen node instance shape. Leave null to use the latest release Oracle Linux 9 image."
+  type        = string
+  nullable    = true
+}
+
 variable "assign_public_ip" {
   description = "Enable/disable the use of public IP addresses on the cluster and provisioning node.  Cluster still requires outbound internet access to function."
   type        = bool

@@ -77,6 +77,12 @@ variable "node_instance_ocpus" {
   type        = number
 }
 
+variable "node_base_image" {
+  description = "The OCID of the image used to launch the node instances. Must be compatible with the chosen node instance shape."
+  type        = string
+  nullable    = false
+}
+
 variable "assign_public_ip" {
   description = "Enable/disable the use of public IP addresses on the cluster and provisioning node.  Cluster still requires outbound internet access to function."
   type        = bool

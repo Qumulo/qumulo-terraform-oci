@@ -37,16 +37,6 @@ locals {
   fault_domains       = data.oci_identity_fault_domains.fault_domains.fault_domains
 }
 
-data "oci_core_images" "base_image" {
-  compartment_id           = var.compartment_ocid
-  operating_system         = "Oracle Linux"
-  operating_system_version = "9"
-  shape                    = var.node_instance_shape
-  state                    = "AVAILABLE"
-  sort_by                  = "DISPLAYNAME"
-  sort_order               = "DESC"
-}
-
 resource "oci_core_instance" "node" {
   count               = var.node_count
   compartment_id      = var.compartment_ocid
@@ -79,7 +69,7 @@ resource "oci_core_instance" "node" {
     ocpus = var.node_instance_ocpus
   }
   source_details {
-    source_id               = data.oci_core_images.base_image.images[0].id
+    source_id               = var.node_base_image
     source_type             = "image"
     boot_volume_size_in_gbs = 256
     boot_volume_vpus_per_gb = 30
