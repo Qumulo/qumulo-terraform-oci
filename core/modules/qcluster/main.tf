@@ -83,6 +83,9 @@ resource "oci_core_instance" "node" {
       error_message = "Lowering the number of deployed nodes (q_node_count) is only supported after removing the extra nodes from the cluster membership via q_cluster_node_count."
     }
   }
+  instance_options {
+    are_legacy_imds_endpoints_disabled = true
+  }
 }
 
 data "oci_core_vnic_attachments" "attachments" {

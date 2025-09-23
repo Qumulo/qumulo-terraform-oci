@@ -89,6 +89,9 @@ resource "oci_core_instance" "provisioner" {
     source_type             = "image"
     boot_volume_vpus_per_gb = 20
   }
+  instance_options {
+    are_legacy_imds_endpoints_disabled = true
+  }
 }
 
 resource "null_resource" "wait_for_completion" {
