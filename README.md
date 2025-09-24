@@ -11,39 +11,60 @@ The deployment creates the following components:
 
 ## Prerequisites
 
-1. A Linux machine running Terraform version 1.7.5 or later
+1. A Linux machine running Terraform version 1.12.2 or later
    * OCI CLI and "jq" installed
 
 2. You will need the following assets provided by Qumulo:
    * qumulo-core.rpm (version 7.4.3B or later)
 
-3. OCI User Permissions:
-   * manage all-resources in compartment your-qumulo-compartment
+3. OCI Object Storage User Permissions
 
-   * One of: 
+   This account is used by the cluster nodes to gain access to the Object Storage buckets used for persistent storage:
+   
+   * One of the following options must be satisfied to proceed:
+     
+      A. Deploying user has the following permissions:
+      * manage users in TENANCY
+      * manage groups in TENANCY
+      * manage policies in TENANCY
 
-       A. OCI Tenancy User Permissions:
-      * manage users IN TENANCY
-      * manage groups IN TENANCY
-      * manage dynamic-groups IN TENANCY
+      B. Precreated User, Group, and Identity Policy
+      * Create a new User
+      * Create a Customer Secret Key for this user, retain these values for use below
+      * Create a Group that includes this user
+      * Create an Identity Policy that includes the statement:
+      ```
+          "Allow group <group created above> to manage object-family in compartment id <cluster deployment compartment> where target.bucket.name = <bucket-prefix in output from persistent storage terraform stack>-bucket-*/"
+      ```
+      * set the variables `custom_secret_key_id` and `custom_secret_key` to the Customer Secret Key OCID and key respectively.
+
+4. OCI Cluster User Permissions:
+
+   These permissions allow the cluster nodes and provisioner node tha ability to interact with resources necessary for cluster operations.
+
+   * One of the following options must be satisfied to proceed: 
+
+       A. Deploying user has the following permissions:
+      * manage dynamic groups IN TENANCY
+      * manage policies in TENANCY
 
       B: Precreated Dynamic Group and Identity Policy
-      * Dynamic Group must include all compute instances in deployment compartment
-      * Identity Policy must include following permissions
+      * Create a Dynamic Group that includes all compute instances in deployment compartment
+      * Create an Identity Policy that includes the following permissions, this policy must be created in a Compartment that contains both the Compartment where the cluster resources will be deployed and the Compartment were the target Subnet is deployed.
          ```
-         "Allow dynamic-group \<dynamic group name> to read secret-bundles in compartment id \<deployment compartment ocid>"
-         "Allow dynamic-group \<dynamic group name> to use secrets in compartment id \<deployment compartment ocid>"
-         "Allow dynamic-group \<dynamic group name> to manage virtual-network-family in compartment id \<network compartment ocid>"
-         "Allow dynamic-group \<dynamic group name> to use instances in compartment id \<deployment compartment ocid>" 
+         "Allow dynamic-group <dynamic group name> to read secret-bundles in compartment id <deployment compartment ocid>"
+         "Allow dynamic-group <dynamic group name> to use secrets in compartment id <deployment compartment ocid>"
+         "Allow dynamic-group <dynamic group name> to manage virtual-network-family in compartment id <network compartment ocid>"
+         "Allow dynamic-group <dynamic group name> to use instances in compartment id <deployment compartment ocid>" 
          ```
-      * Set variable `create_dynamic_group_and_identity_policy` to `false`
+      * Set variable `create_dynamic_group_and_identity_policy` to `false` in the `terraform.tfvars` file
 
-4. OCI Configuration:
+5. OCI Configuration:
    * Valid OCI credentials set for the DEFAULT profile
    * The region in your profile should match the region of the deployment
    * See [OCI CLI Configuration Guide](https://docs.oracle.com/en-us/iaas/Content/Functions/Tasks/functionsconfigureocicli.htm)
 
-5. Network Requirements:
+6. Network Requirements:
    * Subnet with outbound internet access for dependencies and Qumulo monitoring
    * Access to KMS vault for cluster deployment
 
@@ -150,7 +171,7 @@ Tearing down node resources typically takes less than 5 minutes to complete.
 
 ## Adding Object Storage Buckets
 The maximum soft capacity limit on the cluster is determined by the number of object storage buckets configured on the backend. Each object storage bucket
-supports up to 500TiB capacity. If more capacity beyond the current maximum soft capacity limit is needed, you need to add object storage buckets first.
+supports up to 500TB capacity. If more capacity beyond the current maximum soft capacity limit is needed, you need to add object storage buckets first.
 
 This is a two-step operation.
 
@@ -176,7 +197,7 @@ Now you have deployed additional buckets but they are not configured to be used 
 cd ../
 ```
 
-Optionally, you can increase the cluster soft capacity limit at the same time. The maximum cluster soft capacity limit is 500TiB per object storage bucket.
+Optionally, you can increase the cluster soft capacity limit at the same time. The maximum cluster soft capacity limit is 500TB per object storage bucket.
 ```hcl
 # Example configuration
 q_cluster_soft_capacity_limit = 1500
@@ -207,7 +228,7 @@ The Terraform state is stored locally by default. For production deployments, co
 ### Limitations
 - 4 node clusters with fault domain tolerence are not supported. We recommend an initial cluster of 3 nodes or 5 or more nodes for fault domain tolerence.
 - Changing a cluster of 3 nodes or 5 or more nodes to 4 nodes is not supported due to fault domain tolerence incompatibility, vice versa.
-- The maximum cluster soft capacity limit is 500TiB per object storage bucket.
+- The maximum cluster soft capacity limit is 500TB per object storage bucket.
 
 ## Deploying outside the Home Region
 To deploy a cluster outside the home region, the following changes are required:
@@ -215,7 +236,7 @@ To deploy a cluster outside the home region, the following changes are required:
 - Update the region for the DEFAULT profile in your `~/.oci/config` file to the region where you want to deploy the cluster.
 - Update the `subnet_ocid` variable in `terraform.tfvars` to the subnet OCID of the subnet where you want to deploy the cluster.
 - The Secrets Vaults for the cluster and persistent storage must be in the same region as the cluster.
-- You must use a precreated dynamic group and identity policy created in the home region for the cluster.  Set `create_dynamic_group_and_identity_policy` to `false` in `terraform.tfvars`.  Follow the instruction in the [Prerequisites](#prerequisites) section 3.B to create the dynamic group and identity policy.
+- You must use a precreated dynamic group and identity policy created in the home region for the cluster.  Set `create_dynamic_group_and_identity_policy` to `false` in `terraform.tfvars`.  Follow the instruction in the [Prerequisites](#prerequisites) section 4.B to create the dynamic group and identity policy.
 
 ## Support
 

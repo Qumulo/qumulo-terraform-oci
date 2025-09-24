@@ -75,6 +75,7 @@ resource "oci_core_instance" "provisioner" {
       cluster_node_count_secret_id            = var.cluster_node_count_secret_id
       deployed_permanent_disk_count_secret_id = var.deployed_permanent_disk_count_secret_id
       cluster_soft_capacity_limit_secret_id   = var.cluster_soft_capacity_limit_secret_id
+      provisioner_complete_secret_id          = var.provisioner_complete_secret_id
       dev_environment                         = var.dev_environment
     }))
     "ssh_authorized_keys" = join("\n", local.ssh_public_key_contents)
@@ -88,13 +89,16 @@ resource "oci_core_instance" "provisioner" {
     source_type             = "image"
     boot_volume_vpus_per_gb = 20
   }
+  instance_options {
+    are_legacy_imds_endpoints_disabled = true
+  }
 }
 
-resource "null_resource" "wait_for_shutdown" {
+resource "null_resource" "wait_for_completion" {
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
-    command = templatefile(local.wait_for_shutdown_script_path, {
-      instance_id = oci_core_instance.provisioner.id
+    command = templatefile(local.wait_for_completion_script_path, {
+      secret_id = var.provisioner_complete_secret_id
     })
     quiet = true
   }

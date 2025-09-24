@@ -42,24 +42,6 @@ locals {
   vault = data.oci_kms_vault.deployment_vault
 }
 
-resource "oci_objectstorage_object" "qumulo_core" {
-  count     = (var.qumulo_core_rpm_path != null) ? 1 : 0
-  bucket    = var.persistent_storage.bucket[0].name
-  source    = var.qumulo_core_rpm_path
-  namespace = var.persistent_storage.oci_objectstorage_namespace
-  object    = "qumulo-core.rpm"
-}
-
-resource "oci_objectstorage_preauthrequest" "qumulo_core" {
-  count        = (var.qumulo_core_rpm_path != null) ? 1 : 0
-  access_type  = "ObjectRead"
-  bucket       = var.persistent_storage.bucket[0].name
-  object_name  = oci_objectstorage_object.qumulo_core[0].object
-  name         = "qumulo_core access"
-  namespace    = var.persistent_storage.oci_objectstorage_namespace
-  time_expires = timeadd(timestamp(), "5h")
-}
-
 resource "random_uuid" "deployment_id" {
 }
 
@@ -73,7 +55,6 @@ resource "null_resource" "name_lock" {
 
 locals {
   cluster_email          = "${local.deployment_unique_name}-user@qumulo.com"
-  qumulo_core_object_uri = (var.qumulo_core_rpm_url != null) ? var.qumulo_core_rpm_url : "https://objectstorage.${var.persistent_storage.bucket_region}.oraclecloud.com${oci_objectstorage_preauthrequest.qumulo_core[0].access_uri}"
   deployment_unique_name = null_resource.name_lock.triggers.deployment_unique_name
 }
 
@@ -156,7 +137,7 @@ resource "oci_identity_policy" "subnet_policy" {
   freeform_tags  = var.freeform_tags
 
   statements = [
-    "Allow dynamic-group ${oci_identity_dynamic_group.instance_dynamic_group[0].name} to manage virtual-network-family in compartment id ${data.oci_core_subnet.cluster_subnet.compartment_id}",
+    "Allow dynamic-group ${oci_identity_dynamic_group.instance_dynamic_group[0].name} to use virtual-network-family in compartment id ${data.oci_core_subnet.cluster_subnet.compartment_id}",
   ]
 }
 
@@ -206,13 +187,6 @@ resource "oci_vault_secret" "cluster_node_count" {
 # This item acts a barrier to prevent inadvertant node removal before the cluster has successfully removed nodes from membership
 data "external" "cluster_node_count" {
   program = concat(local.retrieve_stored_value_sh, [oci_vault_secret.cluster_node_count.id])
-
-  lifecycle {
-    postcondition {
-      condition     = tonumber(self.result.value) <= var.q_node_count
-      error_message = "Lowering the number of deployed nodes (q_node_count) is only supported after removing the extra nodes from the cluster membership."
-    }
-  }
 }
 
 resource "oci_vault_secret" "deployed_permanent_disk_count" {
@@ -239,13 +213,6 @@ resource "oci_vault_secret" "deployed_permanent_disk_count" {
 
 data "external" "deployed_permanent_disk_count" {
   program = concat(local.retrieve_stored_value_sh, [oci_vault_secret.deployed_permanent_disk_count.id])
-
-  lifecycle {
-    postcondition {
-      condition     = tonumber(self.result.value) == 0 || tonumber(self.result.value) == local.permanent_disk_count
-      error_message = "Modifying the permanent disk count via variable block_volume_count is not supported after the initial deployment."
-    }
-  }
 }
 
 resource "oci_vault_secret" "cluster_soft_capacity_limit" {
@@ -298,9 +265,39 @@ resource "oci_vault_secret" "customer_secret_key_secret" {
   }
 }
 
+resource "oci_vault_secret" "provisioner_complete" {
+  compartment_id = var.compartment_ocid
+  key_id         = local.vault_key_ocid
+  secret_name    = "${local.deployment_unique_name}-provisioner-complete"
+  vault_id       = local.vault.id
+  defined_tags   = length(var.defined_tags) > 0 ? var.defined_tags : null
+  freeform_tags  = var.freeform_tags
+
+  # This value is set on every terraform run until the provisioner sets it to "true"
+  secret_content {
+    content_type = "base64"
+    content      = base64encode(jsonencode(false))
+  }
+}
+
 data "oci_core_subnet" "subnet" {
   subnet_id = var.subnet_ocid
 }
+
+data "oci_core_images" "latest" {
+  compartment_id           = var.compartment_ocid
+  operating_system         = "Oracle Linux"
+  operating_system_version = "9"
+  shape                    = var.node_instance_shape
+  state                    = "AVAILABLE"
+  sort_by                  = "DISPLAYNAME"
+  sort_order               = "DESC"
+}
+
+locals {
+  node_base_image = var.node_base_image != null ? var.node_base_image : data.oci_core_images.latest.images[0].id
+}
+
 module "qcluster" {
   source = "./modules/qcluster"
 
@@ -313,15 +310,18 @@ module "qcluster" {
   node_count           = var.q_node_count
   permanent_disk_count = local.permanent_disk_count
   floating_ip_count    = var.q_cluster_floating_ips
+  persisted_node_count = tonumber(data.external.cluster_node_count.result.value)
+  persisted_disk_count = tonumber(data.external.deployed_permanent_disk_count.result.value)
 
   node_instance_shape = var.node_instance_shape
   node_instance_ocpus = var.node_instance_ocpus
+  node_base_image     = local.node_base_image
   assign_public_ip    = var.assign_public_ip
 
   node_ssh_public_key_paths   = var.node_ssh_public_key_paths
   node_ssh_public_key_strings = var.node_ssh_public_key_strings
 
-  qumulo_core_object_uri = local.qumulo_core_object_uri
+  qumulo_core_object_uri = var.qumulo_core_rpm_url
 
   availability_domain = var.availability_domain
 
@@ -334,8 +334,6 @@ module "qcluster" {
   freeform_tags = var.freeform_tags
 
   depends_on = [
-    data.external.cluster_node_count,
-    data.external.deployed_permanent_disk_count,
     oci_identity_policy.cluster_policy,
     oci_identity_policy.instance_policy
   ]
@@ -372,6 +370,7 @@ module "qprovisioner" {
   cluster_node_count_secret_id            = oci_vault_secret.cluster_node_count.id
   deployed_permanent_disk_count_secret_id = oci_vault_secret.deployed_permanent_disk_count.id
   cluster_soft_capacity_limit_secret_id   = oci_vault_secret.cluster_soft_capacity_limit.id
+  provisioner_complete_secret_id          = oci_vault_secret.provisioner_complete.id
 
   dev_environment = var.dev_environment
   defined_tags    = var.defined_tags

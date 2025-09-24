@@ -26,7 +26,7 @@
 """
 QCluster Node Provisioning Script
 
-This script configures Qumulo cluster nodes during VM initialization on Oracle Cloud 
+This script configures Qumulo cluster nodes during VM initialization on Oracle Cloud
 Infrastructure (OCI). It performs the following operations:
 - Extends the boot drive filesystem
 - Installs required system packages
@@ -36,19 +36,20 @@ Infrastructure (OCI). It performs the following operations:
 - Verifies access to object storage buckets
 - Downloads and installs Qumulo Core software
 
-The script is executed via cloud-init user_data during VM startup and logs all output 
+The script is executed via cloud-init user_data during VM startup and logs all output
 to /var/log/qumulo.log. Variables are provided by Terraform templatefile substitution.
 """
 
 import logging
 import os
 import re
+import requests
 import shutil
 import subprocess
 import time
 
 from pathlib import Path
-from typing import Optional
+from typing import Dict, List, Optional
 
 # Template variables (replaced by Terraform templatefile)
 qumulo_core_uri = "${qumulo_core_uri}"
@@ -71,11 +72,17 @@ class TimeoutError(ProvisioningError):
 
 
 def run_command(
-    cmd: str, timeout: Optional[int] = None, check: bool = True
+    cmd: str,
+    timeout: Optional[int] = None,
 ) -> subprocess.CompletedProcess:
     try:
         result = subprocess.run(
-            cmd, shell=True, check=check, capture_output=True, text=True, timeout=timeout
+            cmd,
+            shell=True,
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
         )
         if result.stdout.strip():
             logging.info(result.stdout.strip())
@@ -109,7 +116,9 @@ def install_package_with_retry(package_name: str) -> None:
 
     for attempt in range(1, 6):
         try:
-            run_command(f"dnf install -y {package_name}", timeout=TIMEOUT_PACKAGE_INSTALL)
+            run_command(
+                f"dnf install -y {package_name}", timeout=TIMEOUT_PACKAGE_INSTALL
+            )
             logging.info(f"Successfully installed {package_name}")
             return
         except (ProvisioningError, TimeoutError):
@@ -117,7 +126,9 @@ def install_package_with_retry(package_name: str) -> None:
                 error_msg = f"Failed to install {package_name} after 5 attempts"
                 raise ProvisioningError(error_msg)
 
-            logging.warning(f"Could not get lock, retrying in 10 seconds... (Attempt: {attempt})")
+            logging.warning(
+                f"Could not get lock, retrying in 10 seconds... (Attempt: {attempt})"
+            )
             time.sleep(10)
 
 
@@ -126,7 +137,9 @@ def configure_selinux() -> None:
         selinux_config = Path("/etc/selinux/config")
         if selinux_config.exists():
             content = selinux_config.read_text()
-            content = re.sub(r"^SELINUX=.*", "SELINUX=permissive", content, flags=re.MULTILINE)
+            content = re.sub(
+                r"^SELINUX=.*", "SELINUX=permissive", content, flags=re.MULTILINE
+            )
             selinux_config.write_text(content)
         else:
             logging.warning("/etc/selinux/config doesn't exist, skipping")
@@ -176,31 +189,35 @@ def disable_conflicting_services() -> None:
         logging.warning(f"sysctl --system failed: {e}")
 
 
+def get_vnic_metadata() -> List[Dict[str, str]]:
+    headers = {"Authorization": "Bearer Oracle"}
+    response = requests.get("http://169.254.169.254/opc/v2/vnics/", headers=headers)
+    return response.json()
+
+
 def create_qumulo_service() -> None:
-    service_content = """
-[Unit]
-Description=Add altname for ens3
+    try:
+        systemd_network = Path("/etc/systemd/network")
+        systemd_network.mkdir(parents=True, exist_ok=True)
 
-[Service]
-ExecStart=/sbin/ip link property add dev ens3 altname qumulo-frontend1
-Type=oneshot
-RemainAfterExit=yes
+        vnic_metadata = get_vnic_metadata()
+        mac_address = vnic_metadata[0]["macAddr"]
 
-[Install]
-WantedBy=multi-user.target
+        link_content = f"""
+[Match]
+MACAddress={mac_address}
+
+[Link]
+AlternativeName=qumulo-frontend1
 """
 
-    try:
-        systemd_system = Path("/etc/systemd/system")
-        systemd_system.mkdir(parents=True, exist_ok=True)
+        link_unit = systemd_network / "10-qumulo-frontend-link-altname.link"
+        link_unit.write_text(link_content)
+        link_unit.chmod(0o644)
 
-        qumulo_service = systemd_system / "qumulo-frontend-link-altname.service"
-        qumulo_service.write_text(service_content)
-        qumulo_service.chmod(0o644)
-
-        run_command("systemctl daemon-reload", timeout=TIMEOUT_SERVICE_OP)
+        # Trigger a udev "add" event to force the altname to be aplied
         run_command(
-            "systemctl enable --now qumulo-frontend-link-altname.service",
+            "udevadm trigger -c add",
             timeout=TIMEOUT_SERVICE_OP,
         )
 
@@ -246,7 +263,7 @@ def verify_object_storage_access() -> None:
                 f'--region "{region}" s3 ls "s3://{bucket_name}" --debug'
             )
 
-            result = run_command(cmd, check=False, timeout=timeout)
+            result = run_command(cmd, timeout=timeout)
 
             if result.returncode == 0:
                 logging.info(f"Customer secret key has access to {uri}")
@@ -271,7 +288,9 @@ def verify_object_storage_access() -> None:
     )
     time.sleep(object_storage_access_delay)
 
-    os.environ.update({"AWS_ACCESS_KEY_ID": access_key_id, "AWS_SECRET_ACCESS_KEY": secret_key})
+    os.environ.update(
+        {"AWS_ACCESS_KEY_ID": access_key_id, "AWS_SECRET_ACCESS_KEY": secret_key}
+    )
 
     uri_list = object_storage_uris.split()
     for uri in uri_list:
@@ -289,13 +308,15 @@ def download_and_install_qumulo() -> None:
 
     try:
         qumulo_rpm = Path("/tmp/qumulo-core.rpm")
-        run_command(f'curl -L -o {qumulo_rpm} "{qumulo_core_uri}"', timeout=TIMEOUT_DOWNLOAD)
+        run_command(
+            f'curl -L -o {qumulo_rpm} "{qumulo_core_uri}"', timeout=TIMEOUT_DOWNLOAD
+        )
 
         logging.info("Installing Qumulo Core")
 
         run_command(f"dnf install -y {qumulo_rpm}", timeout=TIMEOUT_PACKAGE_INSTALL)
 
-        result = run_command("dnf list installed | grep qumulo-core", check=False, timeout=30)
+        result = run_command("dnf list installed | grep qumulo-core", timeout=30)
 
         if result.returncode == 0:
             logging.info("Qumulo Core installed successfully")
@@ -310,7 +331,10 @@ def download_and_install_qumulo() -> None:
 
 def main() -> None:
     logging.basicConfig(
-        filename="/var/log/qumulo.log", level=logging.INFO, format="%(message)s", filemode="a"
+        filename="/var/log/qumulo.log",
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        filemode="a",
     )
 
     # Validate required variables early to fail fast

@@ -37,16 +37,6 @@ locals {
   fault_domains       = data.oci_identity_fault_domains.fault_domains.fault_domains
 }
 
-data "oci_core_images" "base_image" {
-  compartment_id           = var.compartment_ocid
-  operating_system         = "Oracle Linux"
-  operating_system_version = "9"
-  shape                    = var.node_instance_shape
-  state                    = "AVAILABLE"
-  sort_by                  = "DISPLAYNAME"
-  sort_order               = "DESC"
-}
-
 resource "oci_core_instance" "node" {
   count               = var.node_count
   compartment_id      = var.compartment_ocid
@@ -74,19 +64,27 @@ resource "oci_core_instance" "node" {
     }))
     "ssh_authorized_keys" = join("\n", local.ssh_public_key_contents)
   }
-
-  lifecycle {
-    ignore_changes = [metadata, availability_domain, fault_domain, source_details]
-  }
   shape = var.node_instance_shape
   shape_config {
     ocpus = var.node_instance_ocpus
   }
   source_details {
-    source_id               = data.oci_core_images.base_image.images[0].id
+    source_id               = var.node_base_image
     source_type             = "image"
     boot_volume_size_in_gbs = 256
     boot_volume_vpus_per_gb = 30
+  }
+
+  lifecycle {
+    ignore_changes = [metadata, availability_domain, fault_domain, source_details]
+
+    precondition {
+      condition     = var.persisted_node_count <= var.node_count
+      error_message = "Lowering the number of deployed nodes (q_node_count) is only supported after removing the extra nodes from the cluster membership via q_cluster_node_count."
+    }
+  }
+  instance_options {
+    are_legacy_imds_endpoints_disabled = true
   }
 }
 
@@ -131,6 +129,7 @@ module "disk" {
   instance_id            = oci_core_instance.node[count.index].id
   node_id                = count.index
   disk_count             = var.permanent_disk_count
+  persisted_disk_count   = var.persisted_disk_count
   size_in_gbs            = "270"
   vpus_per_gb            = "10"
   defined_tags           = var.defined_tags

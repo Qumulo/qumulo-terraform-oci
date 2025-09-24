@@ -41,10 +41,10 @@ module "core" {
   q_cluster_cold                           = var.q_cluster_cold
   node_instance_shape                      = var.node_instance_shape
   node_instance_ocpus                      = var.node_instance_ocpus
+  node_base_image                          = var.node_base_image
   assign_public_ip                         = var.assign_public_ip
   block_volume_count                       = var.block_volume_count
   vault_ocid                               = var.vault_ocid
-  qumulo_core_rpm_path                     = var.qumulo_core_rpm_path
   qumulo_core_rpm_url                      = var.qumulo_core_rpm_url
   q_cluster_admin_password                 = var.q_cluster_admin_password
   q_cluster_floating_ips                   = var.q_cluster_floating_ips

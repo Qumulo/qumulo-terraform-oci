@@ -134,16 +134,16 @@ variable "q_cluster_name" {
 }
 
 variable "q_cluster_soft_capacity_limit" {
-  description = "The maximum soft capacity of your qumulo cluster, in TiB."
+  description = "The maximum soft capacity of your qumulo cluster, in TB."
   type        = number
   default     = 500
   validation {
     condition     = var.q_cluster_soft_capacity_limit >= 100
-    error_message = "q_cluster_soft_capacity_limit must be at least 100"
+    error_message = "q_cluster_soft_capacity_limit must be at least 100 TB"
   }
   validation {
     condition     = var.q_cluster_soft_capacity_limit <= 500 * length(local.persistent_storage.bucket)
-    error_message = "The maximum value for q_cluster_soft_capacity_limit is 500TiB per object storage bucket. Please add more buckets before increasing the capacity beyond the current supported maximum value of ${500 * length(local.persistent_storage.bucket)}TiB"
+    error_message = "The maximum value for q_cluster_soft_capacity_limit is 500TB per object storage bucket. Please add more buckets before increasing the capacity beyond the current supported maximum value of ${500 * length(local.persistent_storage.bucket)}TB"
   }
 }
 
@@ -202,6 +202,12 @@ variable "node_instance_ocpus" {
   default     = 8
 }
 
+variable "node_base_image" {
+  description = "The OCID of the image used to launch node instances. Must be compatible with the chosen node instance shape. Leave null to use the latest release Oracle Linux 9 image."
+  type        = string
+  nullable    = true
+}
+
 variable "assign_public_ip" {
   description = "Enable/disable the use of public IP addresses on the cluster and provisioning node.  Cluster still requires outbound internet access to function."
   type        = bool
@@ -239,24 +245,10 @@ variable "persistent_storage_vault_ocid" {
   }
 }
 
-variable "qumulo_core_rpm_path" {
-  description = "The local path to the qumulo-core.rpm file for the version of Qumulo you want to install."
-  type        = string
-  nullable    = true
-
-  validation {
-    condition = (
-      (var.qumulo_core_rpm_path == null && var.qumulo_core_rpm_url != null) ||
-      (var.qumulo_core_rpm_path != null && var.qumulo_core_rpm_url == null)
-    )
-    error_message = "Exactly one of qumulo_core_rpm_path or qumulo_core_rpm_url must be set."
-  }
-}
-
 variable "qumulo_core_rpm_url" {
   description = "A URL accessible to the instances pointing to the qumulo-core.rpm object for the version of Qumulo you want to install."
   type        = string
-  nullable    = true
+  nullable    = false
 }
 
 variable "q_cluster_admin_password" {

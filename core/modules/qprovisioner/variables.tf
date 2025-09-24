@@ -43,7 +43,7 @@ variable "node_count" {
 }
 
 variable "soft_capacity_limit" {
-  description = "The soft capacity limit of the qumulo cluster, in TiB"
+  description = "The soft capacity limit of the qumulo cluster, in TB"
   type        = number
 }
 
@@ -149,6 +149,11 @@ variable "deployed_permanent_disk_count_secret_id" {
 
 variable "cluster_soft_capacity_limit_secret_id" {
   description = "The id of the vault secret in which we store the cluster soft capacity limit."
+  type        = string
+}
+
+variable "provisioner_complete_secret_id" {
+  description = "The id of the vault secret in which we store whether the provisioner has completed or not."
   type        = string
 }
 

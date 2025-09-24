@@ -57,6 +57,16 @@ variable "floating_ip_count" {
   type        = number
 }
 
+variable "persisted_node_count" {
+  description = "The number of Qumulo nodes in the already created cluster."
+  type        = number
+}
+
+variable "persisted_disk_count" {
+  description = "The number of permanent disks per node in the already created cluster."
+  type        = number
+}
+
 variable "node_instance_shape" {
   description = "The VM shape to use for the Qumulo nodes."
   type        = string
@@ -65,6 +75,12 @@ variable "node_instance_shape" {
 variable "node_instance_ocpus" {
   description = "The number of OCPUs to use for Qumulo node VMs."
   type        = number
+}
+
+variable "node_base_image" {
+  description = "The OCID of the image used to launch the node instances. Must be compatible with the chosen node instance shape."
+  type        = string
+  nullable    = false
 }
 
 variable "assign_public_ip" {

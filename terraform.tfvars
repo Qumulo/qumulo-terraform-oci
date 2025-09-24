@@ -10,7 +10,8 @@
 # q_cluster_admin_password     - Minumum 8 characters and must include one each of: uppercase, lowercase, and a special character.  If replacing a cluster make sure this password matches current running cluster.
 # node_ssh_public_key_paths    - List of paths to the pre-created admin public key files that should be installed on the OCI virtual machines running Qumulo
 # node_ssh_public_key_strings  - List of pre-created admin public keys that should be installed on the OCI virtual machines running Qumulo
-#  node_ssh_public_key_paths and node_ssh_public_key_strings can be used together or separately, but at least one must be set.
+# node_ssh_public_key_paths and node_ssh_public_key_strings can be used together or separately, but at least one must be set.
+# qumulo_core_rpm_url          - URL to object storing a qumulo-qcore.rpm file
 
 region                      = "my_region"
 availability_domain         = null
@@ -22,19 +23,13 @@ q_cluster_name              = "my_cluster"
 q_cluster_admin_password    = "my_password"
 node_ssh_public_key_paths   = ["my_public_key_file_path", ]
 node_ssh_public_key_strings = ["my_public_key_string", ]
-
-# Set exactly one of the following variables:
-# qumulo_core_rpm_path      - Local path to the downloaded qumulo-qcore.rpm file.
-# qumulo_core_rpm_url       - URL to object storing a qumulo-qcore.rpm file
-
-qumulo_core_rpm_path = "my_rpm_path"
-qumulo_core_rpm_url  = null
+qumulo_core_rpm_url         = "my_rpm_url"
 
 #
 # ****************************** Advanced Configurations **********************************************
 # q_node_count                  - The number of nodes to deploy, this number can be higher than q_cluster_node_count if not all deployed nodes are meant to be added to the cluster.
 # q_cluster_node_count          - The number of nodes in the Qumulo cluster membership
-# q_cluster_soft_capacity_limit - The maximum soft capacity of your Qumulo cluster, in TiB
+# q_cluster_soft_capacity_limit - The maximum soft capacity of your Qumulo cluster, in TB
 # node_instance_shape           - The vm shape for the Qumulo nodes
 # node_instance_ocpus           - The number of ocpus on each Qumulo node
 # block_volume_count            - The number of disks used as write cache and dkv per Qumulo node
