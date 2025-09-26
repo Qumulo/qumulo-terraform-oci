@@ -167,9 +167,9 @@ variable "node_base_image" {
 }
 
 variable "assign_public_ip" {
-  description = "Enable/disable the use of public IP addresses on the cluster and provisioning node.  Cluster still requires outbound internet access to function."
+  description = "Enable/disable the use of public IP addresses on the cluster and provisioning node."
   type        = bool
-  default     = true
+  default     = false
   nullable    = false
 }
 
