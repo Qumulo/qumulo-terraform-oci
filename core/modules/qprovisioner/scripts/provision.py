@@ -269,8 +269,13 @@ def apply_initial_floating_ips(flips: List[str], netmask: str) -> None:
 
     while True:
         try:
-            result = qq_command("raw GET /v3/network/status")
-            if "floating_addresses" in result.stdout:
+            statuses = json.loads(qq_command("network_status").stdout.replace("'", '"'))
+            config_applied = True
+            for status in statuses:
+                if status['network_statuses']['1']['status'] != 'APPLIED':
+                    config_applied = False
+
+            if config_applied:
                 logging.info("Network configuration applied")
                 break
         except ProvisioningError:
