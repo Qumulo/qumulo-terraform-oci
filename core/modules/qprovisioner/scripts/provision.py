@@ -289,7 +289,7 @@ def maybe_update_floating_ips(
     if not qfsd_version or int(qfsd_version.replace(".", "")[:3]) < 751:
         return
 
-    qq_command("network_v3_get_config -o network_config.json")
+    qq_command("network_get_config -o network_config.json")
 
     with open("network_config.json", "r") as f:
         current_config = json.load(f)
@@ -331,7 +331,7 @@ def maybe_update_floating_ips(
         with open("network_config.json", "w") as f:
             json.dump(current_config, f)
 
-        qq_command("network_v3_put_config --file network_config.json")
+        qq_command("network_put_config --file network_config.json")
         wait_for_new_quorum()
 
 
