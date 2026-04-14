@@ -24,24 +24,28 @@
 
 
 data "oci_identity_fault_domains" "by_availability_domain" {
-  for_each = toset(var.availability_domain_names)
+  for_each            = toset(var.availability_domain_names)
   compartment_id      = var.compartment_ocid
   availability_domain = each.value
 }
 
 data "oci_identity_fault_domains" "fault_domains" {
-  availability_domain = local.availability_domain
+  availability_domain = local.single_availability_domain
   compartment_id      = var.compartment_ocid
 }
 
 locals {
-  availability_domain = var.availability_domain == null ? var.availability_domain_names[0] : var.availability_domain
-  fault_domains       = data.oci_identity_fault_domains.fault_domains.fault_domains
+  single_availability_domain = var.availability_domain == null ? var.availability_domain_names[0] : var.availability_domain
+  fault_domains              = data.oci_identity_fault_domains.fault_domains.fault_domains
 
   instance_placement = [
     for i in range(var.node_count) : {
-      availability_domain = var.multi_ad_deployment ? var.availability_domain_names[i % length(var.availability_domain_names)] : local.availability_domain
-      fault_domain        = var.multi_ad_deployment ? null : local.fault_domains[i % length(local.fault_domains)].name
+      availability_domain = var.availability_domain != null ? var.availability_domain : (
+        var.multi_ad_deployment ? var.availability_domain_names[i % length(var.availability_domain_names)] : local.single_availability_domain
+      )
+      fault_domain = var.single_fault_domain != null ? var.single_fault_domain : (
+        var.multi_ad_deployment ? null : local.fault_domains[i % length(local.fault_domains)].name
+      )
     }
   ]
 }
@@ -49,8 +53,8 @@ locals {
 resource "oci_core_instance" "node" {
   count               = var.node_count
   compartment_id      = var.compartment_ocid
-  availability_domain = var.availability_domain == null ? local.instance_placement[count.index].availability_domain : local.availability_domain
-  fault_domain        = var.single_fault_domain != null ? var.single_fault_domain : local.instance_placement[count.index].fault_domain
+  availability_domain = local.instance_placement[count.index].availability_domain
+  fault_domain        = local.instance_placement[count.index].fault_domain
   create_vnic_details {
     assign_ipv6ip             = "false"
     assign_private_dns_record = "true"
@@ -100,8 +104,7 @@ resource "oci_core_instance" "node" {
 data "oci_core_vnic_attachments" "attachments" {
   count               = length(oci_core_instance.node)
   compartment_id      = var.compartment_ocid
-  availability_domain = var.availability_domain == null ? local.instance_placement[count.index].availability_domain : local.availability_domain
-#  availability_domain = local.availability_domain
+  availability_domain = local.instance_placement[count.index].availability_domain
   instance_id         = oci_core_instance.node[count.index].id
 }
 
@@ -133,9 +136,7 @@ module "disk" {
   count  = var.node_count
   source = "../qcluster-disk"
 
-#  availability_domain    = local.availability_domain
-  availability_domain = var.availability_domain == null ? local.instance_placement[count.index].availability_domain : local.availability_domain
-  
+  availability_domain    = local.instance_placement[count.index].availability_domain
   compartment_ocid       = var.compartment_ocid
   deployment_unique_name = var.deployment_unique_name
   instance_id            = oci_core_instance.node[count.index].id

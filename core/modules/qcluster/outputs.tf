@@ -25,18 +25,18 @@
 output "nodes" {
   value = [
     for i, node in oci_core_instance.node : {
-      name         = node.display_name
-      private_ip   = node.private_ip
-      id           = node.id
+      name                = node.display_name
+      private_ip          = node.private_ip
+      id                  = node.id
       availability_domain = node.availability_domain
-      fault_domain = node.fault_domain
-      protection_domain = var.single_fault_domain == null ? var.multi_ad_deployment == false ? (i % length(local.fault_domains)) + 1 : (i % length(var.availability_domain_names)) + 1 : null
+      fault_domain        = node.fault_domain
+      protection_domain   = var.single_fault_domain == null ? var.multi_ad_deployment == false ? (i % length(local.fault_domains)) + 1 : (i % length(var.availability_domain_names)) + 1 : null
     }
   ]
 }
 
 output "availability_domain" {
-  value = local.availability_domain
+  value = local.single_availability_domain
 }
 
 output "floating_ips" {
