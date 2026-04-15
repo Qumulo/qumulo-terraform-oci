@@ -364,12 +364,12 @@ variable "multi_ad_deployment" {
     condition = (
       var.multi_ad_deployment
       ? length(data.oci_identity_availability_domains.ads.availability_domains) >= 1
-      : length(data.oci_identity_fault_domains.by_availability_domain[data.oci_identity_availability_domains.ads.availability_domains[0].name].fault_domains) >= 1
+      : length(data.oci_identity_fault_domains.by_availability_domain[var.availability_domain != null ? var.availability_domain : data.oci_identity_availability_domains.ads.availability_domains[0].name].fault_domains) >= 1
     )
-    error_message = "Placement requirement not met: region must have >= 1 availability domain (multi_ad_deployment=true) or the first availability domain must have >= 1 fault domain (multi_ad_deployment=false)."
+    error_message = "Placement requirement not met: region must have >= 1 availability domain (multi_ad_deployment=true) or the selected/default single availability domain must have >= 1 fault domain (multi_ad_deployment=false)."
   }
   validation {
-    condition = !var.multi_ad_deployment || var.availability_domain == null
+    condition     = !var.multi_ad_deployment || var.availability_domain == null
     error_message = "availability_domain must be null when multi_ad_deployment is true; a single explicit availability domain cannot be combined with multi-AD placement."
   }
 }
