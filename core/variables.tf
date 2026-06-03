@@ -113,6 +113,10 @@ variable "q_node_count" {
     condition     = var.q_node_count >= 1
     error_message = "Node count must be at least 1."
   }
+  validation {
+    condition     = var.q_node_count <= 24
+    error_message = "Node count must be less than or equal to 24."
+  }
 }
 
 variable "q_cluster_node_count" {
@@ -125,6 +129,10 @@ variable "q_cluster_node_count" {
       var.q_cluster_node_count != 2 && var.q_cluster_node_count != 4,
     ])
     error_message = "Clusters with 2 or 4 nodes cannot be created with fault domain tolerance and are therefore not allowed"
+  }
+  validation {
+    condition     = var.q_cluster_node_count <= 24
+    error_message = "Cluster node count must be less than or equal to 24."
   }
 }
 
@@ -233,8 +241,8 @@ variable "q_cluster_floating_ips" {
   type        = number
   default     = 3
   validation {
-    condition     = var.q_cluster_floating_ips == 0 || (var.q_cluster_floating_ips >= var.q_node_count && var.q_cluster_floating_ips <= ceil(var.q_node_count / 2) * 63)
-    error_message = "The number of floating ips must be at least the number of nodes and cannot exceed 63 per node with half of the nodes down. Set to 0 for no floating IPs."
+    condition     = var.q_cluster_floating_ips == 0 || (var.q_cluster_floating_ips >= var.q_node_count && var.q_cluster_floating_ips <= ceil(var.q_node_count / 2) * 31)
+    error_message = "The number of floating ips must be at least the number of nodes and cannot exceed 31 per node with half of the nodes down. Set to 0 for no floating IPs."
   }
 }
 
