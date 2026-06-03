@@ -446,3 +446,9 @@ variable "multi_ad_deployment" {
     error_message = "availability_domain must be null when multi_ad_deployment is true; a single explicit availability domain cannot be combined with multi-AD placement."
   }
 }
+
+variable "provisioner_wait_for_completion_max_retries" {
+  description = "The maximum number of retries to wait for the provisioner to complete."
+  type        = number
+  default     = 60
+}

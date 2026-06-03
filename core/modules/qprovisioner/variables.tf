@@ -179,3 +179,9 @@ variable "dev_environment" {
   type        = bool
   default     = false
 }
+
+variable "provisioner_wait_for_completion_max_retries" {
+  description = "The maximum number of retries to wait for the provisioner to complete."
+  type        = number
+  default     = 60
+}

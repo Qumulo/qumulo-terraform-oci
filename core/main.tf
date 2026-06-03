@@ -521,21 +521,22 @@ module "qprovisioner" {
   instance_ssh_public_key_paths   = var.node_ssh_public_key_paths
   instance_ssh_public_key_strings = var.node_ssh_public_key_strings
 
-  cluster_node_ip_addresses               = local.cluster_node_ips
-  clustering_node_ocid                    = local.clustering_node_id
-  clustering_node_ip_address              = local.clustering_node_ip
-  node_ip_addresses_and_fault_domains     = local.node_ips_and_fault_domains
-  object_storage_uris                     = local.object_storage_uris
-  soft_capacity_limit                     = var.q_cluster_soft_capacity_limit
-  product_type                            = local.product_type
-  secret_ocid                             = oci_vault_secret.customer_secret_key_secret.id
-  admin_password                          = var.q_cluster_admin_password
-  floating_ip_addresses                   = module.qcluster.floating_ips
-  netmask                                 = data.oci_core_subnet.subnet.cidr_block
-  cluster_node_count_secret_id            = oci_vault_secret.cluster_node_count.id
-  deployed_permanent_disk_count_secret_id = oci_vault_secret.deployed_permanent_disk_count.id
-  cluster_soft_capacity_limit_secret_id   = oci_vault_secret.cluster_soft_capacity_limit.id
-  provisioner_complete_secret_id          = oci_vault_secret.provisioner_complete.id
+  cluster_node_ip_addresses                   = local.cluster_node_ips
+  clustering_node_ocid                        = local.clustering_node_id
+  clustering_node_ip_address                  = local.clustering_node_ip
+  node_ip_addresses_and_fault_domains         = local.node_ips_and_fault_domains
+  object_storage_uris                         = local.object_storage_uris
+  soft_capacity_limit                         = var.q_cluster_soft_capacity_limit
+  product_type                                = local.product_type
+  secret_ocid                                 = oci_vault_secret.customer_secret_key_secret.id
+  admin_password                              = var.q_cluster_admin_password
+  floating_ip_addresses                       = module.qcluster.floating_ips
+  netmask                                     = data.oci_core_subnet.subnet.cidr_block
+  cluster_node_count_secret_id                = oci_vault_secret.cluster_node_count.id
+  deployed_permanent_disk_count_secret_id     = oci_vault_secret.deployed_permanent_disk_count.id
+  cluster_soft_capacity_limit_secret_id       = oci_vault_secret.cluster_soft_capacity_limit.id
+  provisioner_complete_secret_id              = oci_vault_secret.provisioner_complete.id
+  provisioner_wait_for_completion_max_retries = var.provisioner_wait_for_completion_max_retries
 
   dev_environment = var.dev_environment
   defined_tags    = var.defined_tags
