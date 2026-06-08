@@ -198,6 +198,20 @@ resource "oci_identity_domains_user" "domain_cluster_user" {
       }
     }
   }
+  lifecycle {
+    ignore_changes = [
+      schemas,
+      attributes,
+      idcs_endpoint,
+      user_name,
+      emails,
+      description,
+      user_type,
+      name,
+      urnietfparamsscimschemasoracleidcsextensioncapabilities_user,
+      urnietfparamsscimschemasoracleidcsextension_oci_tags
+    ]
+  }
 }
 
 resource "oci_identity_domains_customer_secret_key" "domain_cluster_secret_key" {
@@ -241,6 +255,12 @@ resource "oci_identity_domains_group" "domain_cluster_identity_group" {
         value = freeform_tags.value.value
       }
     }
+  }
+  lifecycle {
+    ignore_changes = [
+      schemas,
+      urnietfparamsscimschemasoracleidcsextension_oci_tags
+    ]
   }
 }
 
