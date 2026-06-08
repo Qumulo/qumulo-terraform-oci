@@ -99,7 +99,8 @@ resource "null_resource" "wait_for_completion" {
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
     command = templatefile(local.wait_for_completion_script_path, {
-      secret_id = var.provisioner_complete_secret_id
+      secret_id   = var.provisioner_complete_secret_id
+      max_retries = var.provisioner_wait_for_completion_max_retries
     })
     quiet = true
   }

@@ -21,14 +21,25 @@ The deployment creates the following components:
 
    This account is used by the cluster nodes to gain access to the Object Storage buckets used for persistent storage:
    
-   * One of the following options must be satisfied to proceed:
+   One of the following options must be satisfied to proceed:
      
-      A. Deploying user has the following permissions:
-      * manage users in TENANCY
-      * manage groups in TENANCY
-      * manage policies in TENANCY
+   A. Allow the Stack to deploy the necessary Identity resources automatically
 
-      B. Precreated User, Group, and Identity Policy
+      The OCI account deploying the cluster must have the following permissions:
+
+      * manage users in either the TENANCY or the selected Identity Domain
+      * manage groups in either the TENANCY or the selected Identity Domain
+      * manage policies in either the TENANCY or the selected Identity Domain
+
+      This method will create the necessary identity resources in either the default identity domain or a user selected identity domain based on the settings in the `persistent_storage_access` object
+      1. To create the identity resources in the default identity domain
+         * set `access_style` to `classic`
+      2. To create the identity resources in a non-default identity domain
+         * set `access_style` to `domain`
+         * set `domain_idcs_endpoint` to the URL of the endpoint of the desired Identity Domain
+         * set `domain_identity_domain_display_name` to the display name of the desired Identity Domain
+
+      B. Use a precreated User, Group, and Identity Policy
       * Create a new User
       * Create a Customer Secret Key for this user, retain the Access Key and Secret Key values for use below
       * Create a Group that includes this user
