@@ -36,8 +36,8 @@ The deployment creates the following components:
          * set `access_style` to `classic`
       2. To create the identity resources in a non-default identity domain
          * set `access_style` to `domain`
-      * set `domain_idcs_endpoint` to the URL of the endpoint of the desired Identity Domain
-      * set `domain_identity_domain_display_name` to the display name of the desired Identity Domain
+         * set `domain_idcs_endpoint` to the URL of the endpoint of the desired Identity Domain
+         * set `domain_identity_domain_display_name` to the display name of the desired Identity Domain
 
       B. Use a precreated User, Group, and Identity Policy
       * Create a new User
