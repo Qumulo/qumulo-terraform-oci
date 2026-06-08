@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.5.1](https://github.com/Qumulo/qumulo-terraform-oci/compare/qumulo-terraform-oci-v2.5.0...qumulo-terraform-oci-v2.5.1) (2026-06-08)
+
+
+### Bug Fixes
+
+* add lifecycle rules to prevent repeated deployements of identity domain resources ([c2e99ba](https://github.com/Qumulo/qumulo-terraform-oci/commit/c2e99ba66971e50685dea82af549e180c6b0effc))
+* convert stack completion timeout to variable ([90e8f29](https://github.com/Qumulo/qumulo-terraform-oci/commit/90e8f29bcbc964cc73f1c1963fdec49f9bba2212))
+* corrected node count and floating ip count limits ([45deb7e](https://github.com/Qumulo/qumulo-terraform-oci/commit/45deb7eb3e508938389ffacb463f059d0fc41999))
+* update variable validation in core module ([00f352b](https://github.com/Qumulo/qumulo-terraform-oci/commit/00f352b4b8ae3384900ecef9d3a9a827d21a346d))
+
 ## [2.5.0](https://github.com/Qumulo/qumulo-terraform-oci/compare/qumulo-terraform-oci-v2.4.0...qumulo-terraform-oci-v2.5.0) (2026-05-29)
 
 
