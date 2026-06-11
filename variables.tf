@@ -103,6 +103,13 @@ variable "region" {
   nullable    = false
 }
 
+variable "home_region" {
+  description = "The OCI home region for the tenancy.  Used for deployment of identity resources. EX: us-phoenix-1"
+  type        = string
+  nullable    = true
+  default     = null
+}
+
 variable "compartment_ocid" {
   description = "The compartment into which you want your Qumulo cluster deployed."
   type        = string

@@ -33,6 +33,18 @@ provider "oci" {
   fingerprint         = var.oci_fingerprint
 }
 
+provider "oci" {
+  alias               = "home-region"
+  tenancy_ocid        = var.tenancy_ocid
+  region              = var.home_region != null ? var.home_region : var.region
+  user_ocid           = var.user_ocid
+  auth                = var.oci_auth
+  config_file_profile = var.oci_profile
+  private_key         = var.oci_private_key
+  private_key_path    = var.oci_private_key_path
+  fingerprint         = var.oci_fingerprint
+}
+
 #
 # Users should modify this state to reflect a remote backend as appropriate if
 # they modify the persistent-storage directory and the provider backend

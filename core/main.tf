@@ -86,6 +86,7 @@ moved {
 
 # Classic access model Resources
 resource "oci_identity_user" "classic_cluster_user" {
+  provider       = oci.home-region
   count          = var.persistent_storage_access_model.access_style == "classic" ? 1 : 0
   compartment_id = var.tenancy_ocid
   name           = "${local.deployment_unique_name}-user"
@@ -96,12 +97,14 @@ resource "oci_identity_user" "classic_cluster_user" {
 }
 
 resource "oci_identity_customer_secret_key" "classic_cluster_secret_key" {
+  provider     = oci.home-region
   count        = var.persistent_storage_access_model.access_style == "classic" ? 1 : 0
   user_id      = oci_identity_user.classic_cluster_user[0].id
   display_name = "${local.deployment_unique_name}-secret-key"
 }
 
 resource "oci_identity_group" "classic_cluster_identity_group" {
+  provider       = oci.home-region
   count          = var.persistent_storage_access_model.access_style == "classic" ? 1 : 0
   compartment_id = var.tenancy_ocid
   description    = "The identity group used by the ${local.deployment_unique_name} Qumulo cluster to authenticate to object storage buckets."
@@ -111,12 +114,14 @@ resource "oci_identity_group" "classic_cluster_identity_group" {
 }
 
 resource "oci_identity_user_group_membership" "classic_cluster_group_membership" {
+  provider = oci.home-region
   count    = var.persistent_storage_access_model.access_style == "classic" ? 1 : 0
   group_id = oci_identity_group.classic_cluster_identity_group[0].id
   user_id  = oci_identity_user.classic_cluster_user[0].id
 }
 
 resource "oci_identity_policy" "classic_cluster_policy" {
+  provider       = oci.home-region
   count          = var.persistent_storage_access_model.access_style == "classic" ? 1 : 0
   compartment_id = var.compartment_ocid
   description    = "The identity policy used by the ${local.deployment_unique_name} Qumulo cluster to authenticate to object storage buckets."
@@ -148,7 +153,8 @@ locals {
 }
 
 resource "oci_identity_domains_user" "domain_cluster_user" {
-  count = var.persistent_storage_access_model.access_style == "domain" ? 1 : 0
+  provider = oci.home-region
+  count    = var.persistent_storage_access_model.access_style == "domain" ? 1 : 0
 
   schemas = [
     "urn:ietf:params:scim:schemas:core:2.0:User",
@@ -215,6 +221,7 @@ resource "oci_identity_domains_user" "domain_cluster_user" {
 }
 
 resource "oci_identity_domains_customer_secret_key" "domain_cluster_secret_key" {
+  provider      = oci.home-region
   count         = var.persistent_storage_access_model.access_style == "domain" ? 1 : 0
   idcs_endpoint = var.persistent_storage_access_model.domain_idcs_endpoint
   schemas       = ["urn:ietf:params:scim:schemas:oracle:idcs:customerSecretKey"]
@@ -225,7 +232,8 @@ resource "oci_identity_domains_customer_secret_key" "domain_cluster_secret_key" 
 }
 
 resource "oci_identity_domains_group" "domain_cluster_identity_group" {
-  count = var.persistent_storage_access_model.access_style == "domain" ? 1 : 0
+  provider = oci.home-region
+  count    = var.persistent_storage_access_model.access_style == "domain" ? 1 : 0
   schemas = [
     "urn:ietf:params:scim:schemas:core:2.0:Group",
     "urn:ietf:params:scim:schemas:oracle:idcs:extension:OCITags",
@@ -265,6 +273,7 @@ resource "oci_identity_domains_group" "domain_cluster_identity_group" {
 }
 
 resource "oci_identity_policy" "domain_cluster_policy" {
+  provider       = oci.home-region
   count          = var.persistent_storage_access_model.access_style == "domain" ? 1 : 0
   compartment_id = var.compartment_ocid
   description    = "The identity policy used by the ${local.deployment_unique_name} Qumulo cluster to authenticate to object storage buckets."
@@ -281,6 +290,7 @@ resource "oci_identity_policy" "domain_cluster_policy" {
 # Node access Dynamic Group and Policy
 #   Skipped if create_dynamic_group_and_identity_policy is false
 resource "oci_identity_dynamic_group" "instance_dynamic_group" {
+  provider       = oci.home-region
   count          = var.create_dynamic_group_and_identity_policy ? 1 : 0
   compartment_id = var.tenancy_ocid
   name           = "${local.deployment_unique_name}-instance-dynamic-group"
@@ -291,6 +301,7 @@ resource "oci_identity_dynamic_group" "instance_dynamic_group" {
 }
 
 resource "oci_identity_policy" "instance_policy" {
+  provider       = oci.home-region
   count          = var.create_dynamic_group_and_identity_policy ? 1 : 0
   compartment_id = var.compartment_ocid
   description    = "The identity policy used by the ${local.deployment_unique_name} Qumulo cluster to retrieve and manage resources related to the instances."
@@ -306,6 +317,7 @@ resource "oci_identity_policy" "instance_policy" {
 }
 
 resource "oci_identity_policy" "subnet_policy" {
+  provider       = oci.home-region
   count          = var.create_dynamic_group_and_identity_policy ? 1 : 0
   compartment_id = data.oci_core_subnet.cluster_subnet.compartment_id
   description    = "The identity policy used by the ${local.deployment_unique_name} Qumulo cluster to manage resources related to the host subnet."
