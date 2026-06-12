@@ -455,7 +455,7 @@ variable "multi_ad_deployment" {
 }
 
 variable "provisioner_wait_for_completion_max_retries" {
-  description = "The maximum number of retries to wait for the provisioner to complete."
+  description = "The maximum number of retries to wait for the provisioner to complete.  Each retry is 30 seconds."
   type        = number
   default     = 60
 }
