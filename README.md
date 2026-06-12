@@ -268,6 +268,7 @@ To deploy a cluster outside the home region, the follwing requrements must be sa
 - Update the region for the DEFAULT profile in your `~/.oci/config` file to the region the cluster will be deployed.
 - Add the variable `home_region` to the top level `terraform.tfvars` file and set it to the home region of the deployment tenancy.
 - Because of extended IAM replication times between regions, consider increasing the values of `object_storage_access_delay` and `provisioner_wait_for_completion_max_retries`, especially when using a non-default identity domain.
+- If using Identity Domain based IAM resources, ensure that replication to the target domain is enabled.
 
 ## Upgrading from previous versions of this Terraform
 When upgrading from release 2.4.0 or earlier, the following changes must be made to prevent cluster redeployment
