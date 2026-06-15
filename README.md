@@ -249,7 +249,7 @@ This scripts supports the use of customer managed keys for encrypting the object
 
 ### Customer managed key for persistent object storage
 - Create or import a Master Encryption Key in the same region as the deployed cluster
-- Create a policy statement that allows the object storage service to access the key (e.g. `Allow service objectstorage-us-phoenix-1 to use keys in compartment Storage`)
+- Create a policy statement that allows the object storage service in the deployment region to access the key (e.g. `Allow service objectstorage-us-phoenix-1 to use keys in compartment Storage`)
   - This policy can be made stricter through the use of conditions, but must allow the object storage service to access the selected encryption key
 - Set the variable `object_storage_encryption_key` to the OCID of the desired key before applying the `persistent-storage` stack.
 - This variable can be changed and the stack re-applied without redeploying the persistent storage buckets.  This allows key rotation on an existing cluster's persistent object storage.
@@ -263,12 +263,12 @@ This scripts supports the use of customer managed keys for encrypting the object
 
 
 ## Deploying outside the Home Region
-To deploy a cluster outside the home region, the following changes are required:
-- Update the `region` variable in `terraform.tfvars` to the region where you want to deploy the cluster.
-- Update the region for the DEFAULT profile in your `~/.oci/config` file to the region where you want to deploy the cluster.
-- Update the `subnet_ocid` variable in `terraform.tfvars` to the subnet OCID of the subnet where you want to deploy the cluster.
+To deploy a cluster outside the home region, the follwing requrements must be satisfied:
 - The Secrets Vaults for the cluster and persistent storage must be in the same region as the cluster.
-- You must use a precreated dynamic group and identity policy created in the home region for the cluster.  Set `create_dynamic_group_and_identity_policy` to `false` in `terraform.tfvars`.  Follow the instruction in the [Prerequisites](#prerequisites) section 4.B to create the dynamic group and identity policy.
+- Update the region for the DEFAULT profile in your `~/.oci/config` file to the region the cluster will be deployed.
+- Add the variable `home_region` to the top level `terraform.tfvars` file and set it to the home region of the deployment tenancy.
+- Because of extended IAM replication times between regions, consider increasing the values of `object_storage_access_delay` and `provisioner_wait_for_completion_max_retries`, especially when using a non-default identity domain.
+- If using Identity Domain based IAM resources, ensure that replication to the target domain is enabled.
 
 ## Upgrading from previous versions of this Terraform
 When upgrading from release 2.4.0 or earlier, the following changes must be made to prevent cluster redeployment

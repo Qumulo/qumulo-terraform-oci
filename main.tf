@@ -29,6 +29,11 @@
 module "core" {
   source = "./core/"
 
+  providers = {
+    oci             = oci
+    oci.home-region = oci.home-region
+  }
+
   dev_environment                             = var.dev_environment
   multi_ad_deployment                         = var.multi_ad_deployment
   single_fault_domain                         = var.single_fault_domain

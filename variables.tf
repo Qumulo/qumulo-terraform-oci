@@ -103,6 +103,13 @@ variable "region" {
   nullable    = false
 }
 
+variable "home_region" {
+  description = "The OCI home region for the tenancy.  Used for deployment of identity resources. EX: us-phoenix-1"
+  type        = string
+  nullable    = true
+  default     = null
+}
+
 variable "compartment_ocid" {
   description = "The compartment into which you want your Qumulo cluster deployed."
   type        = string
@@ -448,7 +455,7 @@ variable "multi_ad_deployment" {
 }
 
 variable "provisioner_wait_for_completion_max_retries" {
-  description = "The maximum number of retries to wait for the provisioner to complete."
+  description = "The maximum number of retries to wait for the provisioner to complete.  Each retry is 30 seconds."
   type        = number
   default     = 60
 }
