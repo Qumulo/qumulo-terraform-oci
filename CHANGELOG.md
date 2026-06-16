@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.6.0](https://github.com/Qumulo/qumulo-terraform-oci/compare/qumulo-terraform-oci-v2.5.1...qumulo-terraform-oci-v2.6.0) (2026-06-15)
+
+
+### Features
+
+* add alias provider for deploying iam resources into home region ([a772627](https://github.com/Qumulo/qumulo-terraform-oci/commit/a772627b41c8cd737264fdacfde66dc71a483efa))
+* move dynamic group into identity domain when selected ([27e0a1f](https://github.com/Qumulo/qumulo-terraform-oci/commit/27e0a1f60936cd4cbb12a845a2b5f3f0781078ce))
+
 ## [2.5.1](https://github.com/Qumulo/qumulo-terraform-oci/compare/qumulo-terraform-oci-v2.5.0...qumulo-terraform-oci-v2.5.1) (2026-06-08)
 
 
