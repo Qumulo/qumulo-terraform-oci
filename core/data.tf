@@ -32,3 +32,46 @@ data "oci_identity_fault_domains" "by_availability_domain" {
   compartment_id      = var.compartment_ocid
   availability_domain = each.key
 }
+
+data "oci_kms_vault" "deployment_vault" {
+  vault_id = null_resource.vault_lock.triggers.deployment_vault_ocid
+}
+
+data "oci_core_subnet" "cluster_subnet" {
+  subnet_id = var.subnet_ocid
+}
+
+# This item acts a barrier to prevent inadvertant node removal before the cluster has successfully removed nodes from membership
+data "external" "cluster_node_count" {
+  program = concat(local.retrieve_stored_value_sh, [oci_vault_secret.cluster_node_count.id])
+}
+
+data "external" "deployed_permanent_disk_count" {
+  program = concat(local.retrieve_stored_value_sh, [oci_vault_secret.deployed_permanent_disk_count.id])
+}
+
+data "external" "cluster_soft_capacity_limit" {
+  program = concat(local.retrieve_stored_value_sh, [oci_vault_secret.cluster_soft_capacity_limit.id])
+
+  lifecycle {
+    postcondition {
+      condition     = tonumber(self.result.value) <= var.q_cluster_soft_capacity_limit
+      error_message = "Decreasing cluster soft capacity limit is not supported."
+    }
+  }
+}
+
+data "oci_core_subnet" "subnet" {
+  subnet_id = var.subnet_ocid
+}
+
+data "oci_core_images" "latest" {
+  compartment_id           = var.compartment_ocid
+  operating_system         = "Oracle Linux"
+  operating_system_version = "9"
+  shape                    = var.node_instance_shape
+  state                    = "AVAILABLE"
+  sort_by                  = "DISPLAYNAME"
+  sort_order               = "DESC"
+}
+
