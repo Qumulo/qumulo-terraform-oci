@@ -134,18 +134,6 @@ resource "oci_identity_policy" "classic_cluster_policy" {
   ]
 }
 
-# Skipped if create_dynamic_group_and_identity_policy is false
-resource "oci_identity_dynamic_group" "instance_dynamic_group" {
-  provider       = oci.home-region
-  count          = var.create_dynamic_group_and_identity_policy && var.persistent_storage_access_model.access_style != "domain" ? 1 : 0
-  compartment_id = var.tenancy_ocid
-  name           = "${local.deployment_unique_name}-instance-dynamic-group"
-  description    = "The dynamic group used by the ${local.deployment_unique_name} Qumulo cluster to obtain instance privileges."
-  matching_rule  = "instance.compartment.id = '${var.compartment_ocid}'"
-  defined_tags   = length(var.defined_tags) > 0 ? var.defined_tags : null
-  freeform_tags  = var.freeform_tags
-}
-
 
 # Domain access model Resources
 locals {
@@ -287,72 +275,22 @@ resource "oci_identity_domains_group" "domain_cluster_identity_group" {
 resource "oci_identity_policy" "domain_cluster_policy" {
   provider       = oci.home-region
   count          = var.persistent_storage_access_model.access_style == "domain" ? 1 : 0
-  compartment_id = var.compartment_ocid
+  compartment_id = var.persistent_storage.compartment_ocid
   description    = "The identity policy used by the ${local.deployment_unique_name} Qumulo cluster to authenticate to object storage buckets."
   name           = "${local.deployment_unique_name}-cluster-identity-policy"
   defined_tags   = length(var.defined_tags) > 0 ? var.defined_tags : null
   freeform_tags  = var.freeform_tags
 
   statements = [
-    "Allow group '${var.persistent_storage_access_model.domain_identity_domain_display_name}'/'${oci_identity_domains_group.domain_cluster_identity_group[0].display_name}' to manage object-family in compartment id ${var.persistent_storage.compartment_ocid} where target.bucket.name = /${var.persistent_storage.bucket_prefix}-bucket-*/"
+    "Allow any-user to manage object-family in compartment id ${var.persistent_storage.compartment_ocid} where all { request.principal.type = 'instance', request.principal.compartment.id = '${var.compartment_ocid}', target.bucket.name = /${var.persistent_storage.bucket_prefix}-bucket-*/}"
   ]
-}
-
-# Skipped if create_dynamic_group_and_identity_policy is false
-resource "oci_identity_domains_dynamic_resource_group" "domain_instance_dynamic_group" {
-  provider = oci.home-region
-  count    = var.create_dynamic_group_and_identity_policy && var.persistent_storage_access_model.access_style == "domain" ? 1 : 0
-
-  schemas = [
-    "urn:ietf:params:scim:schemas:oracle:idcs:DynamicResourceGroup",
-    "urn:ietf:params:scim:schemas:oracle:idcs:extension:OCITags",
-  ]
-  attributes    = "tags"
-  idcs_endpoint = var.persistent_storage_access_model.domain_idcs_endpoint
-  display_name  = "${local.deployment_unique_name}-instance-dynamic-group"
-  description   = "The dynamic group used by the ${local.deployment_unique_name} Qumulo cluster to obtain instance privileges."
-  matching_rule = "instance.compartment.id = '${var.compartment_ocid}'"
-  urnietfparamsscimschemasoracleidcsextension_oci_tags {
-    dynamic "defined_tags" {
-      for_each = { for i, t in local.idc_defined_tag_list : "${t.namespace}.${t.key}" => t }
-      content {
-        namespace = defined_tags.value.namespace
-        key       = defined_tags.value.key
-        value     = defined_tags.value.value
-      }
-    }
-
-    dynamic "freeform_tags" {
-      for_each = { for t in local.idc_freeform_tag_list : t.key => t }
-      content {
-        key   = freeform_tags.value.key
-        value = freeform_tags.value.value
-      }
-    }
-  }
-  lifecycle {
-    ignore_changes = [
-      schemas,
-      attributes,
-      idcs_endpoint,
-      urnietfparamsscimschemasoracleidcsextension_oci_tags
-    ]
-  }
 }
 
 # Instance access Policies
-# Skipped if create_dynamic_group_and_identity_policy is false
-locals {
-  instance_dynamic_group_policy_subject = var.create_dynamic_group_and_identity_policy ? (
-    var.persistent_storage_access_model.access_style == "domain"
-    ? "'${var.persistent_storage_access_model.domain_identity_domain_display_name}'/'${oci_identity_domains_dynamic_resource_group.domain_instance_dynamic_group[0].display_name}'"
-    : oci_identity_dynamic_group.instance_dynamic_group[0].name
-  ) : null
-}
-
+# Skipped if create_identity_policies is false
 resource "oci_identity_policy" "instance_policy" {
   provider       = oci.home-region
-  count          = var.create_dynamic_group_and_identity_policy ? 1 : 0
+  count          = var.create_identity_policies ? 1 : 0
   compartment_id = var.compartment_ocid
   description    = "The identity policy used by the ${local.deployment_unique_name} Qumulo cluster to retrieve and manage resources related to the instances."
   name           = "${local.deployment_unique_name}-instance-policy"
@@ -360,15 +298,16 @@ resource "oci_identity_policy" "instance_policy" {
   freeform_tags  = var.freeform_tags
 
   statements = [
-    "Allow dynamic-group ${local.instance_dynamic_group_policy_subject} to read secret-bundles in compartment id ${var.compartment_ocid}",
-    "Allow dynamic-group ${local.instance_dynamic_group_policy_subject} to use secrets in compartment id ${var.compartment_ocid}",
-    "Allow dynamic-group ${local.instance_dynamic_group_policy_subject} to use instances in compartment id ${var.compartment_ocid}"
+    "Allow any-user to read secret-bundles in compartment id ${var.compartment_ocid} where all { request.principal.type = 'instance', request.principal.compartment.id = '${var.compartment_ocid}' }",
+    "Allow any-user to use secrets in compartment id ${var.compartment_ocid} where all { request.principal.type = 'instance', request.principal.compartment.id = '${var.compartment_ocid}' }",
+    "Allow any-user to use instances in compartment id ${var.compartment_ocid} where all { request.principal.type = 'instance', request.principal.compartment.id = '${var.compartment_ocid}' }",
+    "Allow any-user to manage object-family in compartment id ${var.persistent_storage.compartment_ocid} where all { request.principal.type = 'instance', request.principal.compartment.id = '${var.compartment_ocid}' }"
   ]
 }
 
 resource "oci_identity_policy" "subnet_policy" {
   provider       = oci.home-region
-  count          = var.create_dynamic_group_and_identity_policy ? 1 : 0
+  count          = var.create_identity_policies ? 1 : 0
   compartment_id = data.oci_core_subnet.cluster_subnet.compartment_id
   description    = "The identity policy used by the ${local.deployment_unique_name} Qumulo cluster to manage resources related to the host subnet."
   name           = "${local.deployment_unique_name}-subnet-policy"
@@ -376,7 +315,7 @@ resource "oci_identity_policy" "subnet_policy" {
   freeform_tags  = var.freeform_tags
 
   statements = [
-    "Allow dynamic-group ${local.instance_dynamic_group_policy_subject} to use virtual-network-family in compartment id ${data.oci_core_subnet.cluster_subnet.compartment_id}",
+    "Allow any-user to use virtual-network-family in compartment id ${data.oci_core_subnet.cluster_subnet.compartment_id} where all { request.principal.type = 'instance', request.principal.compartment.id = '${var.compartment_ocid}' }",
   ]
 }
 

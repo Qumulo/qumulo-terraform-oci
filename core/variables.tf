@@ -252,8 +252,8 @@ variable "availability_domain" {
   default     = null
 }
 
-variable "create_dynamic_group_and_identity_policy" {
-  description = "If true, will create new dynamic group and identity policy for instances in deployment compartment.  Otherwise assumes group and policy are pre-deployed."
+variable "create_identity_policies" {
+  description = "If true, will create identity policies for instances in deployment compartment.  Otherwise assumes policiesare pre-deployed."
   type        = bool
   nullable    = false
   default     = true

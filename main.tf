@@ -59,7 +59,7 @@ module "core" {
   q_cluster_admin_password                    = var.q_cluster_admin_password
   q_cluster_floating_ips                      = var.q_cluster_floating_ips
   availability_domain                         = var.availability_domain
-  create_dynamic_group_and_identity_policy    = var.create_dynamic_group_and_identity_policy
+  create_identity_policies                    = var.create_identity_policies
   persistent_storage_access_model             = var.persistent_storage_access_model
   vault_key_ocid                              = var.vault_key_ocid
   provisioner_instance_shape                  = var.provisioner_instance_shape
