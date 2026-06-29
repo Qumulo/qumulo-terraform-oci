@@ -247,7 +247,8 @@ resource "oci_identity_policy" "domain_cluster_policy" {
   freeform_tags  = var.freeform_tags
 
   statements = [
-    "Allow any-user to manage object-family in compartment id ${var.persistent_storage_compartment_ocid} where all { request.principal.type = 'instance', request.principal.compartment.id = '${var.compartment_ocid}', target.bucket.name = /${var.persistent_storage_bucket_prefix}-bucket-*/}"
+    "Allow group '${var.persistent_storage_access_model.domain_identity_domain_display_name}'/'${oci_identity_domains_group.domain_cluster_identity_group[0].display_name}' to manage object-family in compartment id ${var.persistent_storage_compartment_ocid} where target.bucket.name = /${var.persistent_storage_bucket_prefix}-bucket-*/"
+
   ]
 }
 
