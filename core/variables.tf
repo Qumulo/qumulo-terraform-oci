@@ -33,6 +33,7 @@ variable "persistent_storage" {
     bucket_prefix       = string
     object_storage_uris = list(string)
     compartment_ocid    = string
+    deployment_id       = string
   })
   nullable = true
   default  = null
@@ -252,8 +253,8 @@ variable "availability_domain" {
   default     = null
 }
 
-variable "create_identity_policies" {
-  description = "If true, will create identity policies for instances in deployment compartment.  Otherwise assumes policiesare pre-deployed."
+variable "create_identity_resources" {
+  description = "If true, will create identity resources for instances.  Otherwise assumes resources are pre-deployed."
   type        = bool
   nullable    = false
   default     = true

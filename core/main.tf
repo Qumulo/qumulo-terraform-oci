@@ -30,12 +30,12 @@ resource "null_resource" "vault_lock" {
   lifecycle { ignore_changes = all }
 }
 
-resource "random_uuid" "deployment_id" {
-}
+#resource "random_uuid" "deployment_id" {
+#}
 
 resource "null_resource" "name_lock" {
   triggers = {
-    deployment_unique_name = "${var.q_cluster_name}-${random_uuid.deployment_id.result}"
+    deployment_unique_name = "${var.q_cluster_name}-${var.persistent_storage.deployment_id}"
   }
 
   lifecycle { ignore_changes = all }
@@ -155,6 +155,28 @@ resource "oci_vault_secret" "provisioner_complete" {
   }
 }
 
+# Identity resources
+module "identity" {
+  source = "./modules/identity"
+
+  providers = {
+    oci             = oci
+    oci.home-region = oci.home-region
+  }
+
+  count = var.create_identity_resources ? 1 : 0
+
+  deployment_unique_name              = local.deployment_unique_name
+  cluster_email                       = local.cluster_email
+  tenancy_ocid                        = var.tenancy_ocid
+  compartment_ocid                    = var.compartment_ocid
+  persistent_storage_access_model     = var.persistent_storage_access_model
+  subnet_compartment_id               = data.oci_core_subnet.cluster_subnet.compartment_id
+  persistent_storage_compartment_ocid = var.persistent_storage.compartment_ocid
+  persistent_storage_bucket_prefix    = var.persistent_storage.bucket_prefix
+  defined_tags                        = var.defined_tags
+  freeform_tags                       = var.freeform_tags
+}
 
 # Cluster nodes
 module "qcluster" {
@@ -197,7 +219,7 @@ module "qcluster" {
   freeform_tags = var.freeform_tags
 
   depends_on = [
-    oci_identity_policy.instance_policy,
+    local.instance_policy_id,
     local.cluster_policy_id
   ]
 }

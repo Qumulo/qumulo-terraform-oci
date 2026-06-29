@@ -45,14 +45,18 @@ locals {
 }
 
 locals {
-  access_key_id            = sensitive(var.persistent_storage_access_model.access_style == "explicit" ? var.persistent_storage_access_model.explicit_customer_secret_key_access_key : var.persistent_storage_access_model.access_style == "domain" ? oci_identity_domains_customer_secret_key.domain_cluster_secret_key[0].access_key : oci_identity_customer_secret_key.classic_cluster_secret_key[0].id)
-  secret_key               = sensitive(var.persistent_storage_access_model.access_style == "explicit" ? var.persistent_storage_access_model.explicit_customer_secret_key_secret_key : var.persistent_storage_access_model.access_style == "domain" ? oci_identity_domains_customer_secret_key.domain_cluster_secret_key[0].secret_key : oci_identity_customer_secret_key.classic_cluster_secret_key[0].key)
+  access_key_id            = sensitive(var.persistent_storage_access_model.access_style == "explicit" ? var.persistent_storage_access_model.explicit_customer_secret_key_access_key : var.persistent_storage_access_model.access_style == "domain" ? module.identity[0].domain_cluster_customer_secret_id : module.identity[0].classic_cluster_customer_secret_id)
+  secret_key               = sensitive(var.persistent_storage_access_model.access_style == "explicit" ? var.persistent_storage_access_model.explicit_customer_secret_key_secret_key : var.persistent_storage_access_model.access_style == "domain" ? module.identity[0].domain_cluster_customer_secret_key : module.identity[0].classic_cluster_customer_secret_key)
   retrieve_stored_value_sh = ["${path.module}/scripts/retrieve_stored_value.sh"]
   vault_key_ocid           = var.vault_key_ocid != null ? var.vault_key_ocid : oci_kms_key.vault_key[0].id
 }
 
 locals {
-  node_base_image   = var.node_base_image != null ? var.node_base_image : data.oci_core_images.latest.images[0].id
-  cluster_policy_id = var.persistent_storage_access_model.access_style == "explicit" ? "1" : var.persistent_storage_access_model.access_style == "classic" ? oci_identity_policy.classic_cluster_policy[0].id : oci_identity_policy.domain_cluster_policy[0].id
+  node_base_image = var.node_base_image != null ? var.node_base_image : data.oci_core_images.latest.images[0].id
+}
+
+locals {
+  instance_policy_id = var.create_identity_resources ? module.identity[0].instance_policy_id : "1"
+  cluster_policy_id  = var.create_identity_resources ? module.identity[0].cluster_policy_id : "1"
 }
 
