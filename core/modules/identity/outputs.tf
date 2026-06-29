@@ -31,11 +31,11 @@ output "classic_cluster_customer_secret_key" {
 }
 
 output "domain_cluster_customer_secret_id" {
-  value = var.persistent_storage_access_model.access_style == "domain" ? oci_identity_domains_customer_secret_key.domain_cluster_secret_key[0].id : null
+  value = var.persistent_storage_access_model.access_style == "domain" ? oci_identity_domains_customer_secret_key.domain_cluster_secret_key[0].access_key : null
 }
 
 output "domain_cluster_customer_secret_key" {
-  value = var.persistent_storage_access_model.access_style == "domain" ? oci_identity_domains_customer_secret_key.domain_cluster_secret_key[0].access_key : null
+  value = var.persistent_storage_access_model.access_style == "domain" ? oci_identity_domains_customer_secret_key.domain_cluster_secret_key[0].secret_key : null
 }
 
 output "cluster_policy_id" {
