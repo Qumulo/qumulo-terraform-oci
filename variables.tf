@@ -311,8 +311,8 @@ variable "availability_domain" {
   default     = null
 }
 
-variable "create_identity_policies" {
-  description = "If true, will create new identity policies for instances in deployment compartment.  Otherwise assumes policies are pre-deployed."
+variable "create_identity_resources" {
+  description = "If true, will create identity resources for instances.  Otherwise assumes policies are pre-deployed."
   type        = bool
   nullable    = false
   default     = true

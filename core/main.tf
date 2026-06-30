@@ -30,9 +30,6 @@ resource "null_resource" "vault_lock" {
   lifecycle { ignore_changes = all }
 }
 
-#resource "random_uuid" "deployment_id" {
-#}
-
 resource "null_resource" "name_lock" {
   triggers = {
     deployment_unique_name = "${var.q_cluster_name}-${var.persistent_storage.deployment_id}"
