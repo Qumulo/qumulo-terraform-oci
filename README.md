@@ -267,18 +267,27 @@ To deploy a cluster outside the home region, the follwing requrements must be sa
 - The Secrets Vaults for the cluster and persistent storage must be in the same region as the cluster.
 - Update the region for the DEFAULT profile in your `~/.oci/config` file to the region the cluster will be deployed.
 - Add the variable `home_region` to the top level `terraform.tfvars` file and set it to the home region of the deployment tenancy.
-- Because of extended IAM replication times between regions, consider increasing the values of `object_storage_access_delay` and `provisioner_wait_for_completion_max_retries`, especially when using a non-default identity domain.
-- If using Identity Domain based IAM resources, ensure that replication to the target domain is enabled.
+- Because of extended IAM replication times between regions, consider increasing the values of `object_storage_access_delay` and `provisioner_wait_for_completion_max_retries`, especially when using a non-default identity domain
+- If using Identity Domain based IAM resources, ensure that replication to the target domain is enabled
+### Deploying in an environment where cross-region resource deployment is prohibited
+In an environment where all resources must be deployed by a process connected directly to that region, follow the steps below
+- Update the region for the DEFAULT profile in your `~/.oci/config` file to the target region for the cluster.
+- Deploy the `persistent-storage` stack in the cluster's target region
+- Update the region for the DEFAULT profile in your `~/.oci/config` file to the home region for your tenancy.
+- Set the variables in the `identity` stack's `terraform.tfvars` to match your deployment, using the notes below
+    - Set `persistent_storage_bucket_prefix` to the `persistent-storage` stack's output value of `bucket_prefix`
+    - Set `deployment_unique_name` to the combination of `cluster_name` and the output value of`deployment_id`, separated by a hyphen
+- Deploy the `identity` stack in the tenancy's home region
+- Update the region for the DEFAULT profile in your `~/.oci/config` file to the target region for the cluster.
+- Set the variables in the top-level stack's `terraform.tfvars`, using the notes below.
+  - Set the value of `persistent_storage_access_model.access_style` to `explicit`
+  - Set the value of `persistent_storage_access_model.explicit_customer_secret_key_access_key` to the `identity` stack's output of either `classic_cluster_customer_secret_id` or `domain_cluster_customer_secret_id` depending on which identity deployment style was chosen.
+  - Set the value of `persistent_storage_access_model.explicit_customer_secret_key_secret_key` to the `identity` stack's output of either `classic_cluster_customer_secret_key` or `domain_cluster_customer_secret_key` depending on which identity deployment style was chosen.
+  - Set the value of `create_identity_resources` to `false`
+- Deploy the top-level stack in the cluster's target region
 
 ## Upgrading from previous versions of this Terraform
-When upgrading from release 2.4.0 or earlier, the following changes must be made to prevent cluster redeployment
-- Do not set customer defined encryption keys for block volumes, setting customer defined keys for persistent storage buckets is supported
-- If using the `custom_secret_key_id` and `custom_secret_key` variables, add the `persistent_storage_access_model` block and make the following changes
-  - set `access_style` to `explicit`
-  - set `explicit_customer_secret_key_access_key` to the value of `custom_secret_key_id`
-  - set `explicit_customer_secret_key_secret_key` to the value of `custom_secret_key`
-- Otherwise, add the `persistent_storage_access_model` block and set `access_style` to `classic`
-- Apply the terraform stack to update the resource identities associated with persistent storage access.  There should be no changes to the deployed cluster resources.
+Previous releases of this stack cannot be upgraded to this version.  Continue to maintain older clusters using the original deployment release.
 
 ## Support
 

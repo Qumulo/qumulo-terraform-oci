@@ -22,6 +22,51 @@
  * SOFTWARE.
  */
 
+ moved {
+  from = oci_identity_domains_user.domain_cluster_user[0]
+  to = module.identity[0].oci_identity_domains_user.domain_cluster_user[0]
+}
+
+ moved {
+  from = oci_identity_domains_customer_secret_key.domain_cluster_secret_key[0]
+  to = module.identity[0].oci_identity_domains_customer_secret_key.domain_cluster_secret_key[0]
+}
+moved {
+  from = oci_identity_domains_group.domain_cluster_identity_group[0]
+  to = module.identity[0].oci_identity_domains_group.domain_cluster_identity_group[0]
+}
+
+moved {
+  from = oci_identity_policy.domain_cluster_policy[0]
+  to   = module.identity[0].oci_identity_policy.domain_cluster_policy[0]
+}
+
+moved {
+  from = oci_identity_user.classic_cluster_user[0]
+  to = module.identity[0].oci_identity_user.classic_cluster_user[0]
+}
+
+moved {
+  from = oci_identity_customer_secret_key.classic_cluster_secret_key[0]
+  to = module.identity[0].oci_identity_customer_secret_key.classic_cluster_secret_key[0]
+}
+
+moved {
+  from = oci_identity_group.classic_cluster_identity_group[0]
+  to = module.identity[0].oci_identity_group.classic_cluster_identity_group[0]
+}
+
+moved {
+  from = oci_identity_user_group_membership.classic_cluster_group_membership[0]
+  to = module.identity[0].oci_identity_user_group_membership.classic_cluster_group_membership[0]
+}
+
+moved {
+  from = oci_identity_policy.classic_cluster_policy[0]
+  to = module.identity[0].oci_identity_policy.classic_cluster_policy[0]
+}
+
+
 resource "null_resource" "vault_lock" {
   triggers = {
     deployment_vault_ocid = var.vault_ocid
