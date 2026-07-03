@@ -30,8 +30,6 @@ module "identity" {
     oci.home-region = oci.home-region
   }
 
-  count = 1
-
   deployment_unique_name              = var.deployment_unique_name
   cluster_email                       = local.cluster_email
   tenancy_ocid                        = var.tenancy_ocid

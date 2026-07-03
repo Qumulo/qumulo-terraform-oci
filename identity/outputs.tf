@@ -23,29 +23,29 @@
  */
 
 output "classic_cluster_customer_secret_id" {
-  value     = var.persistent_storage_access_model.access_style == "classic" ? module.identity[0].classic_cluster_customer_secret_id : null
+  value     = var.persistent_storage_access_model.access_style == "classic" ? module.identity.classic_cluster_customer_secret_id : null
   sensitive = true
 }
 
 output "classic_cluster_customer_secret_key" {
-  value     = var.persistent_storage_access_model.access_style == "classic" ? module.identity[0].classic_cluster_customer_secret_key : null
+  value     = var.persistent_storage_access_model.access_style == "classic" ? module.identity.classic_cluster_customer_secret_key : null
   sensitive = true
 }
 
 output "domain_cluster_customer_secret_id" {
-  value     = var.persistent_storage_access_model.access_style == "domain" ? module.identity[0].domain_cluster_customer_secret_id : null
+  value     = var.persistent_storage_access_model.access_style == "domain" ? module.identity.domain_cluster_customer_secret_id : null
   sensitive = true
 }
 
 output "domain_cluster_customer_secret_key" {
-  value     = var.persistent_storage_access_model.access_style == "domain" ? module.identity[0].domain_cluster_customer_secret_key : null
+  value     = var.persistent_storage_access_model.access_style == "domain" ? module.identity.domain_cluster_customer_secret_key : null
   sensitive = true
 }
 
 output "cluster_policy_id" {
-  value = var.persistent_storage_access_model.access_style == "explicit" ? "1" : module.identity[0].cluster_policy_id
+  value = var.persistent_storage_access_model.access_style == "explicit" ? "1" : module.identity.cluster_policy_id
 }
 
 output "instance_policy_id" {
-  value = module.identity[0].instance_policy_id
+  value = module.identity.instance_policy_id
 }
