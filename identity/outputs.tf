@@ -23,19 +23,23 @@
  */
 
 output "classic_cluster_customer_secret_id" {
-  value = var.persistent_storage_access_model.access_style == "classic" ? module.identity[0].classic_cluster_customer_secret_id : null
+  value     = var.persistent_storage_access_model.access_style == "classic" ? module.identity[0].classic_cluster_customer_secret_id : null
+  sensitive = true
 }
 
 output "classic_cluster_customer_secret_key" {
-  value = var.persistent_storage_access_model.access_style == "classic" ? module.identity[0].classic_cluster_customer_secret_key : null
+  value     = var.persistent_storage_access_model.access_style == "classic" ? module.identity[0].classic_cluster_customer_secret_key : null
+  sensitive = true
 }
 
 output "domain_cluster_customer_secret_id" {
-  value = var.persistent_storage_access_model.access_style == "domain" ? module.identity[0].domain_cluster_customer_secret_id : null
+  value     = var.persistent_storage_access_model.access_style == "domain" ? module.identity[0].domain_cluster_customer_secret_id : null
+  sensitive = true
 }
 
 output "domain_cluster_customer_secret_key" {
-  value = var.persistent_storage_access_model.access_style == "domain" ? module.identity[0].domain_cluster_customer_secret_key : null
+  value     = var.persistent_storage_access_model.access_style == "domain" ? module.identity[0].domain_cluster_customer_secret_key : null
+  sensitive = true
 }
 
 output "cluster_policy_id" {

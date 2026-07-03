@@ -23,32 +23,6 @@
  */
 
 
-# Directives to help migration from older versions of the module
-moved {
-  from = oci_identity_user.cluster_user
-  to   = oci_identity_user.classic_cluster_user
-}
-
-moved {
-  from = oci_identity_customer_secret_key.cluster_secret_key
-  to   = oci_identity_customer_secret_key.classic_cluster_secret_key
-}
-
-moved {
-  from = oci_identity_group.cluster_identity_group
-  to   = oci_identity_group.classic_cluster_identity_group
-}
-
-moved {
-  from = oci_identity_user_group_membership.cluster_group_membership
-  to   = oci_identity_user_group_membership.classic_cluster_group_membership
-}
-
-moved {
-  from = oci_identity_policy.cluster_policy
-  to   = oci_identity_policy.classic_cluster_policy
-}
-
 # Classic access model Resources
 resource "oci_identity_user" "classic_cluster_user" {
   provider       = oci.home-region
@@ -265,7 +239,7 @@ resource "oci_identity_policy" "instance_policy" {
     "Allow any-user to read secret-bundles in compartment id ${var.compartment_ocid} where all { request.principal.type = 'instance', request.principal.compartment.id = '${var.compartment_ocid}' }",
     "Allow any-user to use secrets in compartment id ${var.compartment_ocid} where all { request.principal.type = 'instance', request.principal.compartment.id = '${var.compartment_ocid}' }",
     "Allow any-user to use instances in compartment id ${var.compartment_ocid} where all { request.principal.type = 'instance', request.principal.compartment.id = '${var.compartment_ocid}' }",
-    "Allow any-user to manage object-family in compartment id ${var.persistent_storage_compartment_ocid} where all { request.principal.type = 'instance', request.principal.compartment.id = '${var.compartment_ocid}' }"
+    "Allow any-user to manage object-family in compartment id ${var.persistent_storage_compartment_ocid} where all { request.principal.type = 'instance', request.principal.compartment.id = '${var.compartment_ocid}', target.bucket.name = /${var.persistent_storage_bucket_prefix}-bucket-*/ }"
   ]
 }
 

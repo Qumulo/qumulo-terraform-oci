@@ -312,7 +312,7 @@ variable "availability_domain" {
 }
 
 variable "create_identity_resources" {
-  description = "If true, will create identity resources for instances.  Otherwise assumes policies are pre-deployed."
+  description = "If true, will create identity resources for instances.  Otherwise assumes identity resources are either pre-deployed or will be created using the identity top-level stack."
   type        = bool
   nullable    = false
   default     = true
