@@ -23,22 +23,22 @@
  */
 
 output "classic_cluster_customer_secret_id" {
-  value     = var.persistent_storage_access_model.access_style == "classic" ? module.identity.classic_cluster_customer_secret_id : null
+  value     = module.identity.classic_cluster_customer_secret_id
   sensitive = true
 }
 
 output "classic_cluster_customer_secret_key" {
-  value     = var.persistent_storage_access_model.access_style == "classic" ? module.identity.classic_cluster_customer_secret_key : null
+  value     = module.identity.classic_cluster_customer_secret_key
   sensitive = true
 }
 
 output "domain_cluster_customer_secret_id" {
-  value     = var.persistent_storage_access_model.access_style == "domain" ? module.identity.domain_cluster_customer_secret_id : null
+  value     = module.identity.domain_cluster_customer_secret_id
   sensitive = true
 }
 
 output "domain_cluster_customer_secret_key" {
-  value     = var.persistent_storage_access_model.access_style == "domain" ? module.identity.domain_cluster_customer_secret_key : null
+  value     = module.identity.domain_cluster_customer_secret_key
   sensitive = true
 }
 
