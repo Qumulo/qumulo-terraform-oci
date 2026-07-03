@@ -258,6 +258,10 @@ variable "create_identity_resources" {
   type        = bool
   nullable    = false
   default     = true
+  validation {
+    condition = var.create_identity_resources || var.persistent_storage_access_model.access_style == "explicit"
+    error_message = "create_identity_resources = false requires persistent_storage_access_model.access_style = explicit: with identity resources pre-deployed, the cluster's customer secret key must be supplied via explicit_customer_secret_key_access_key / explicit_customer_secret_key_secret_key."
+  } 
 }
 
 
