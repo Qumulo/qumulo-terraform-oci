@@ -1,5 +1,34 @@
 # Changelog
 
+## [3.0.0](https://github.com/Qumulo/qumulo-terraform-oci/compare/qumulo-terraform-oci-v2.6.0...qumulo-terraform-oci-v3.0.0) (2026-07-06)
+
+
+### ⚠ BREAKING CHANGES
+
+* removed version compatiblity statements
+
+### Features
+
+* add identity.tf file ([c361226](https://github.com/Qumulo/qumulo-terraform-oci/commit/c36122699e62bb8906d239039548673c2482e70b))
+* add independent identity deployment ([09d8354](https://github.com/Qumulo/qumulo-terraform-oci/commit/09d8354f41444600bed9b21b053045024269e308))
+* remove dynamic group usage ([a85edf4](https://github.com/Qumulo/qumulo-terraform-oci/commit/a85edf451fe616bc79e6b213c5089f2d6abf96db))
+* removed version compatiblity statements ([dbda9b9](https://github.com/Qumulo/qumulo-terraform-oci/commit/dbda9b91ab88fa122c6a3e6dde48f40970b0116b))
+* separate identity into distinct file ([4e677e6](https://github.com/Qumulo/qumulo-terraform-oci/commit/4e677e6347807d29c6924a9e828f73ae022f8259))
+* standardize deployment uuid between persistent-storage and cluster ([3705a3f](https://github.com/Qumulo/qumulo-terraform-oci/commit/3705a3f55fbac47b18824826fca363871ea8af9c))
+
+
+### Bug Fixes
+
+* add validation on identity resources flag ([42f98b8](https://github.com/Qumulo/qumulo-terraform-oci/commit/42f98b807c0b1413bdeb7145934b9334bc9fa33a))
+* additional review notes ([de508c2](https://github.com/Qumulo/qumulo-terraform-oci/commit/de508c25e308dab4baaa8a72047d09599adab434))
+* correct identity outputs ([23c324e](https://github.com/Qumulo/qumulo-terraform-oci/commit/23c324e826cd39a968c3c4327943561f0d2791bb))
+* domain identity bucket policy ([a964cc3](https://github.com/Qumulo/qumulo-terraform-oci/commit/a964cc3f8ac88e2603767803b7b61cb9a12d63ca))
+* remove iterator from identy top-level ([e9a60e2](https://github.com/Qumulo/qumulo-terraform-oci/commit/e9a60e2f1f1342f4492cb8bf900cd0ae52caf6f4))
+* remove unused identity outputs ([2cf404e](https://github.com/Qumulo/qumulo-terraform-oci/commit/2cf404e078810310cb633cc29628be5b1a58354b))
+* reverted default instance shape ([e79f7d7](https://github.com/Qumulo/qumulo-terraform-oci/commit/e79f7d728436e8a5533de64459d5567df1b5f0ec))
+* review notes part 1 ([808c564](https://github.com/Qumulo/qumulo-terraform-oci/commit/808c564bb84737650fffe54e06583c573aacc851))
+* update core/locals ([e209f33](https://github.com/Qumulo/qumulo-terraform-oci/commit/e209f3340a56a9284c87d9257e3d548354ba9713))
+
 ## [2.6.0](https://github.com/Qumulo/qumulo-terraform-oci/compare/qumulo-terraform-oci-v2.5.1...qumulo-terraform-oci-v2.6.0) (2026-06-15)
 
 
