@@ -41,11 +41,3 @@ output "domain_cluster_customer_secret_key" {
   value     = module.identity.domain_cluster_customer_secret_key
   sensitive = true
 }
-
-output "cluster_policy_id" {
-  value = var.persistent_storage_access_model.access_style == "explicit" ? "1" : module.identity.cluster_policy_id
-}
-
-output "instance_policy_id" {
-  value = module.identity.instance_policy_id
-}

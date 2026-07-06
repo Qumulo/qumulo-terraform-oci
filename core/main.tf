@@ -261,9 +261,9 @@ module "qcluster" {
   freeform_tags = var.freeform_tags
 
   depends_on = [
-    local.instance_policy_id,
-    local.cluster_policy_id
+    module.identity[0]
   ]
+
 }
 
 # Cluster provisioning management server

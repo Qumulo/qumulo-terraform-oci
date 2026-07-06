@@ -37,11 +37,3 @@ output "domain_cluster_customer_secret_id" {
 output "domain_cluster_customer_secret_key" {
   value = var.persistent_storage_access_model.access_style == "domain" ? oci_identity_domains_customer_secret_key.domain_cluster_secret_key[0].secret_key : null
 }
-
-output "cluster_policy_id" {
-  value = var.persistent_storage_access_model.access_style == "explicit" ? "1" : var.persistent_storage_access_model.access_style == "classic" ? oci_identity_policy.classic_cluster_policy[0].id : oci_identity_policy.domain_cluster_policy[0].id
-}
-
-output "instance_policy_id" {
-  value = oci_identity_policy.instance_policy.id
-}
