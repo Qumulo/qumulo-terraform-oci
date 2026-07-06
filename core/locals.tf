@@ -55,8 +55,3 @@ locals {
   node_base_image = var.node_base_image != null ? var.node_base_image : data.oci_core_images.latest.images[0].id
 }
 
-locals {
-  instance_policy_id = var.create_identity_resources ? module.identity[0].instance_policy_id : "1"
-  cluster_policy_id  = var.create_identity_resources ? module.identity[0].cluster_policy_id : "1"
-}
-
