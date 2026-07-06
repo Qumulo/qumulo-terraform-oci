@@ -51,6 +51,4 @@ block_volume_count            = 3
 q_cluster_cold                = false
 vault_ocid                    = "my_vault"
 persistent_storage_vault_ocid = "my_vault"
-custom_secret_key_id          = null
-custom_secret_key             = null
-q_cluster_floating_ips        = 0
+q_cluster_floating_ips        = 6

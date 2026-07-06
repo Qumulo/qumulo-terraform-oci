@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2025 Qumulo
+ * Copyright (c) 2026 Qumulo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,33 +22,22 @@
  * SOFTWARE.
  */
 
-output "oci_objectstorage_namespace" {
-  value = data.oci_objectstorage_namespace.namespace.namespace
-}
+module "identity" {
+  source = "../core/modules/identity"
 
-output "bucket" {
-  value = oci_objectstorage_bucket.bucket
-}
+  providers = {
+    oci             = oci
+    oci.home-region = oci.home-region
+  }
 
-output "bucket_region" {
-  value = local.deployment_region
-}
-
-output "bucket_prefix" {
-  value = local.deployment_unique_name
-}
-
-output "object_storage_uris" {
-  value = [
-    for i in oci_objectstorage_bucket.bucket :
-    "https://${data.oci_objectstorage_namespace.namespace.namespace}.compat.objectstorage.${local.deployment_region}.oraclecloud.com/${i.name}"
-  ]
-}
-
-output "compartment_ocid" {
-  value = oci_objectstorage_bucket.bucket[0].compartment_id
-}
-
-output "deployment_id" {
-  value = random_uuid.deployment_id.result
+  deployment_unique_name              = var.deployment_unique_name
+  cluster_email                       = local.cluster_email
+  tenancy_ocid                        = var.tenancy_ocid
+  compartment_ocid                    = var.compartment_ocid
+  persistent_storage_access_model     = var.persistent_storage_access_model
+  subnet_compartment_id               = var.subnet_compartment_ocid
+  persistent_storage_compartment_ocid = var.persistent_storage_compartment_ocid
+  persistent_storage_bucket_prefix    = var.persistent_storage_bucket_prefix
+  defined_tags                        = var.defined_tags
+  freeform_tags                       = var.freeform_tags
 }

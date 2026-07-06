@@ -33,6 +33,7 @@ variable "persistent_storage" {
     bucket_prefix       = string
     object_storage_uris = list(string)
     compartment_ocid    = string
+    deployment_id       = string
   })
   nullable = true
   default  = null
@@ -252,11 +253,15 @@ variable "availability_domain" {
   default     = null
 }
 
-variable "create_dynamic_group_and_identity_policy" {
-  description = "If true, will create new dynamic group and identity policy for instances in deployment compartment.  Otherwise assumes group and policy are pre-deployed."
+variable "create_identity_resources" {
+  description = "If true, will create identity resources for instances.  Otherwise assumes resources are pre-deployed."
   type        = bool
   nullable    = false
   default     = true
+  validation {
+    condition     = var.create_identity_resources || var.persistent_storage_access_model.access_style == "explicit"
+    error_message = "create_identity_resources = false requires persistent_storage_access_model.access_style = explicit: with identity resources pre-deployed, the cluster's customer secret key must be supplied via explicit_customer_secret_key_access_key / explicit_customer_secret_key_secret_key."
+  }
 }
 
 

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2025 Qumulo
+ * Copyright (c) 2026 Qumulo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,33 +22,6 @@
  * SOFTWARE.
  */
 
-output "oci_objectstorage_namespace" {
-  value = data.oci_objectstorage_namespace.namespace.namespace
-}
-
-output "bucket" {
-  value = oci_objectstorage_bucket.bucket
-}
-
-output "bucket_region" {
-  value = local.deployment_region
-}
-
-output "bucket_prefix" {
-  value = local.deployment_unique_name
-}
-
-output "object_storage_uris" {
-  value = [
-    for i in oci_objectstorage_bucket.bucket :
-    "https://${data.oci_objectstorage_namespace.namespace.namespace}.compat.objectstorage.${local.deployment_region}.oraclecloud.com/${i.name}"
-  ]
-}
-
-output "compartment_ocid" {
-  value = oci_objectstorage_bucket.bucket[0].compartment_id
-}
-
-output "deployment_id" {
-  value = random_uuid.deployment_id.result
+provider "oci" {
+  alias = "home-region"
 }

@@ -22,33 +22,13 @@
  * SOFTWARE.
  */
 
-output "oci_objectstorage_namespace" {
-  value = data.oci_objectstorage_namespace.namespace.namespace
-}
-
-output "bucket" {
-  value = oci_objectstorage_bucket.bucket
-}
-
-output "bucket_region" {
-  value = local.deployment_region
-}
-
-output "bucket_prefix" {
-  value = local.deployment_unique_name
-}
-
-output "object_storage_uris" {
-  value = [
-    for i in oci_objectstorage_bucket.bucket :
-    "https://${data.oci_objectstorage_namespace.namespace.namespace}.compat.objectstorage.${local.deployment_region}.oraclecloud.com/${i.name}"
-  ]
-}
-
-output "compartment_ocid" {
-  value = oci_objectstorage_bucket.bucket[0].compartment_id
-}
-
-output "deployment_id" {
-  value = random_uuid.deployment_id.result
+terraform {
+  required_version = ">= 1.12.2"
+  required_providers {
+    oci = {
+      source                = "oracle/oci"
+      version               = ">= 8.0.0"
+      configuration_aliases = [oci.home-region]
+    }
+  }
 }
