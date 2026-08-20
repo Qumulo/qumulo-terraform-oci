@@ -23,7 +23,7 @@
  */
 
 # x-release-please-start-version
-# **** Version 3.0.0 ****
+# **** Version 3.0.1 ****
 # x-release-please-end-version
 
 module "core" {

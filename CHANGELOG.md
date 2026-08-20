@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.0.1](https://github.com/Qumulo/qumulo-terraform-oci/compare/qumulo-terraform-oci-v3.0.0...qumulo-terraform-oci-v3.0.1) (2026-08-20)
+
+
+### Bug Fixes
+
+* retry the Qumulo Core download during node provisioning ([d0210ba](https://github.com/Qumulo/qumulo-terraform-oci/commit/d0210ba9b627bf3257c99e5d4101287aef08948a))
+* retry the Qumulo Core download during node provisioning ([db8337f](https://github.com/Qumulo/qumulo-terraform-oci/commit/db8337f46943c612511d7dbe3ff2a10fc5ea8dee))
+
 ## [3.0.0](https://github.com/Qumulo/qumulo-terraform-oci/compare/qumulo-terraform-oci-v2.6.0...qumulo-terraform-oci-v3.0.0) (2026-07-06)
 
 
