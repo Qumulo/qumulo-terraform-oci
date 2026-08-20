@@ -61,6 +61,8 @@ object_storage_access_delay = int("${object_storage_access_delay}")
 TIMEOUT_PACKAGE_INSTALL = 600
 TIMEOUT_DOWNLOAD = 900
 TIMEOUT_SERVICE_OP = 60
+DOWNLOAD_ATTEMPTS = 10
+DOWNLOAD_RETRY_DELAY = 10
 
 
 class ProvisioningError(Exception):
@@ -309,9 +311,21 @@ def download_and_install_qumulo() -> None:
 
     try:
         qumulo_rpm = Path("/tmp/qumulo-core.rpm")
-        run_command(
-            f'curl -L -o {qumulo_rpm} "{qumulo_core_uri}"', timeout=TIMEOUT_DOWNLOAD
-        )
+        for attempt in range(1, DOWNLOAD_ATTEMPTS + 1):
+            try:
+                run_command(
+                    f'curl -fL -C - -o {qumulo_rpm} "{qumulo_core_uri}"',
+                    timeout=TIMEOUT_DOWNLOAD,
+                )
+                break
+            except (ProvisioningError, TimeoutError):
+                if attempt >= DOWNLOAD_ATTEMPTS:
+                    raise
+                logging.warning(
+                    f"Download failed, retrying in {DOWNLOAD_RETRY_DELAY} seconds "
+                    f"(attempt {attempt} of {DOWNLOAD_ATTEMPTS})"
+                )
+                time.sleep(DOWNLOAD_RETRY_DELAY)
 
         logging.info("Installing Qumulo Core")
 
