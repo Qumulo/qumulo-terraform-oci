@@ -1,5 +1,14 @@
 # Changelog
 
+## [3.0.2](https://github.com/Qumulo/qumulo-terraform-oci/compare/qumulo-terraform-oci-v3.0.1...qumulo-terraform-oci-v3.0.2) (2026-08-26)
+
+
+### Bug Fixes
+
+* error if we encounter an invalid qfsd_version string ([1fd5f8f](https://github.com/Qumulo/qumulo-terraform-oci/commit/1fd5f8f63fa4ed22cb71e9d6d61dc0472ad6cae3))
+* parse qfsd version correctly when updating floating ips ([ef2f3d7](https://github.com/Qumulo/qumulo-terraform-oci/commit/ef2f3d75264855fab73c2209831877fa49119506))
+* retry download of aws-cli during provisioning ([6eb9b81](https://github.com/Qumulo/qumulo-terraform-oci/commit/6eb9b812d0be24b4f510d358a65992ee02eb1f38))
+
 ## [3.0.1](https://github.com/Qumulo/qumulo-terraform-oci/compare/qumulo-terraform-oci-v3.0.0...qumulo-terraform-oci-v3.0.1) (2026-08-20)
 
 
