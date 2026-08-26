@@ -286,14 +286,7 @@ def maybe_update_floating_ips(
     netmask: str,
     qfsd_version: str,
 ) -> None:
-    try:
-        version_tuple = tuple(int(part) for part in qfsd_version.split("."))
-    except ValueError:
-        logging.info(
-            f"Invalid qfsd version '{qfsd_version}', skipping floating IP update"
-        )
-        return
-
+    version_tuple = tuple(int(part) for part in qfsd_version.split("."))
     if version_tuple < (7, 5, 1):
         logging.info(
             f"qfsd version '{qfsd_version}' is older than 7.5.1, skipping floating IP update"
