@@ -286,7 +286,11 @@ def maybe_update_floating_ips(
     netmask: str,
     qfsd_version: str,
 ) -> None:
-    if not qfsd_version or int(qfsd_version.replace(".", "")[:3]) < 751:
+    version_tuple = tuple(int(part) for part in qfsd_version.split("."))
+    if version_tuple < (7, 5, 1):
+        logging.info(
+            f"qfsd version '{qfsd_version}' is older than 7.5.1, skipping floating IP update"
+        )
         return
 
     qq_command("network_v3_get_config -o network_config.json")

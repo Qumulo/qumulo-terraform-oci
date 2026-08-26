@@ -110,6 +110,25 @@ def command_exists(command: str) -> bool:
     return shutil.which(command) is not None
 
 
+def run_command_with_retry(
+    cmd: str,
+    timeout: Optional[int] = None,
+    attempts: int = DOWNLOAD_ATTEMPTS,
+    delay: int = DOWNLOAD_RETRY_DELAY,
+) -> subprocess.CompletedProcess:
+    for attempt in range(1, attempts + 1):
+        try:
+            return run_command(cmd, timeout=timeout)
+        except (ProvisioningError, TimeoutError):
+            if attempt >= attempts:
+                raise
+            logging.warning(
+                f"Command failed, retrying in {delay} seconds "
+                f"(attempt {attempt} of {attempts}): {cmd}"
+            )
+            time.sleep(delay)
+
+
 def install_package_with_retry(package_name: str) -> None:
     if command_exists(package_name):
         logging.info(f"{package_name} already installed")
@@ -236,8 +255,8 @@ def download_and_install_aws_cli() -> None:
 
     try:
         logging.info("Downloading AWS CLI...")
-        run_command(
-            'curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"',
+        run_command_with_retry(
+            'curl -fL -C - "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"',
             timeout=TIMEOUT_DOWNLOAD,
         )
 
@@ -311,21 +330,10 @@ def download_and_install_qumulo() -> None:
 
     try:
         qumulo_rpm = Path("/tmp/qumulo-core.rpm")
-        for attempt in range(1, DOWNLOAD_ATTEMPTS + 1):
-            try:
-                run_command(
-                    f'curl -fL -C - -o {qumulo_rpm} "{qumulo_core_uri}"',
-                    timeout=TIMEOUT_DOWNLOAD,
-                )
-                break
-            except (ProvisioningError, TimeoutError):
-                if attempt >= DOWNLOAD_ATTEMPTS:
-                    raise
-                logging.warning(
-                    f"Download failed, retrying in {DOWNLOAD_RETRY_DELAY} seconds "
-                    f"(attempt {attempt} of {DOWNLOAD_ATTEMPTS})"
-                )
-                time.sleep(DOWNLOAD_RETRY_DELAY)
+        run_command_with_retry(
+            f'curl -fL -C - -o {qumulo_rpm} "{qumulo_core_uri}"',
+            timeout=TIMEOUT_DOWNLOAD,
+        )
 
         logging.info("Installing Qumulo Core")
 
