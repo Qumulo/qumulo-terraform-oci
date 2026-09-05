@@ -269,8 +269,13 @@ def apply_initial_floating_ips(flips: List[str], netmask: str) -> None:
 
     while True:
         try:
-            result = qq_command("raw GET /v3/network/status")
-            if "floating_addresses" in result.stdout:
+            statuses = json.loads(qq_command("network_status").stdout.replace("'", '"'))
+            config_applied = True
+            for status in statuses:
+                if status['network_statuses']['1']['status'] != 'APPLIED':
+                    config_applied = False
+
+            if config_applied:
                 logging.info("Network configuration applied")
                 break
         except ProvisioningError:
@@ -293,7 +298,7 @@ def maybe_update_floating_ips(
         )
         return
 
-    qq_command("network_v3_get_config -o network_config.json")
+    qq_command("network_get_config -o network_config.json")
 
     with open("network_config.json", "r") as f:
         current_config = json.load(f)
@@ -335,7 +340,7 @@ def maybe_update_floating_ips(
         with open("network_config.json", "w") as f:
             json.dump(current_config, f)
 
-        qq_command("network_v3_put_config --file network_config.json")
+        qq_command("network_put_config --file network_config.json")
         wait_for_new_quorum()
 
 

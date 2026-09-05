@@ -231,6 +231,7 @@ MACAddress={mac_address}
 
 [Link]
 AlternativeName=qumulo-frontend1
+AlternativeName=qumulo-backend
 """
 
         link_unit = systemd_network / "10-qumulo-frontend-link-altname.link"
