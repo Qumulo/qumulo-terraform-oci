@@ -32,6 +32,7 @@ Infrastructure (OCI). It performs the following operations:
 - Installs required system packages
 - Configures system services (SELinux, systemd services)
 - Sets up network interface aliases
+- Recreates a local NVMe namespace when the drive arrives with none
 - Installs AWS CLI for object storage access
 - Verifies access to object storage buckets
 - Downloads and installs Qumulo Core software
@@ -40,6 +41,8 @@ The script is executed via cloud-init user_data during VM startup and logs all o
 to /var/log/qumulo.log. Variables are provided by Terraform templatefile substitution.
 """
 
+import glob
+import json
 import logging
 import os
 import re
@@ -49,7 +52,7 @@ import subprocess
 import time
 
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 # Template variables (replaced by Terraform templatefile)
 qumulo_core_uri = "${qumulo_core_uri}"
@@ -57,6 +60,17 @@ object_storage_uris = "${object_storage_uris}"
 access_key_id = "${access_key_id}"
 secret_key = "${secret_key}"
 object_storage_access_delay = int("${object_storage_access_delay}")
+
+NVME_SYSFS_CLASS = "/sys/class/nvme"
+# Measured on a healthy drive. tnvmcap/4096 is 12.9% larger and consumes the spare area;
+# --block-size finds no matching FLBAS here.
+NVME_NAMESPACE_MODEL = "SAMSUNG MZWLJ7T6HALA-00AU3"
+NVME_NAMESPACE_BLOCKS = 1660481046
+NVME_NAMESPACE_FLBAS = 2
+TIMEOUT_NVME_COMMAND = 20
+TIMEOUT_NVME_APPEAR = 30
+NVME_REPAIR_WINDOW = 300
+NVME_REPAIR_RETRY_DELAY = 10
 
 TIMEOUT_PACKAGE_INSTALL = 600
 TIMEOUT_DOWNLOAD = 900
@@ -76,6 +90,7 @@ class TimeoutError(ProvisioningError):
 def run_command(
     cmd: str,
     timeout: Optional[int] = None,
+    quiet: bool = False,
 ) -> subprocess.CompletedProcess:
     try:
         result = subprocess.run(
@@ -86,7 +101,7 @@ def run_command(
             text=True,
             timeout=timeout,
         )
-        if result.stdout.strip():
+        if result.stdout.strip() and not quiet:
             logging.info(result.stdout.strip())
         if result.stderr.strip():
             logging.error(result.stderr.strip())
@@ -209,6 +224,90 @@ def disable_conflicting_services() -> None:
         logging.info("Applied system configuration")
     except (ProvisioningError, TimeoutError) as e:
         logging.warning(f"sysctl --system failed: {e}")
+
+
+def nvme_query(cmd: str) -> Dict[str, Any]:
+    # Quiet: each query returns several KB of JSON.
+    result = run_command(f"{cmd} -o json", timeout=TIMEOUT_NVME_COMMAND, quiet=True)
+    return json.loads(result.stdout)
+
+
+def nvme_namespace_dirs(controller: str) -> List[str]:
+    return glob.glob(f"{NVME_SYSFS_CLASS}/{controller}/nvme*n*")
+
+
+def repair_nvme_namespace(controller: str) -> None:
+    device = f"/dev/{controller}"
+    identity = nvme_query(f"nvme id-ctrl {device}")
+    # --all lists unattached namespaces too; without it a retry allocates a second one.
+    if not nvme_query(f"nvme list-ns --all {device}")["nsid_list"]:
+        model = " ".join(identity["mn"].split())
+        if model != NVME_NAMESPACE_MODEL:
+            logging.error(
+                f"{device} has no namespace; {model!r} is not a model this script can size"
+            )
+            return
+        # A drive that merely lost its block device still holds data. Test it here, not at
+        # the top: a partly repaired drive fails this and would never reach the attach.
+        if identity["unvmcap"] != identity["tnvmcap"]:
+            logging.error(f"{device} has no namespace but is not fully unallocated")
+            return
+        logging.warning(f"{device} arrived with no namespace; recreating it")
+        run_command(
+            f"nvme create-ns {device} --nsze={NVME_NAMESPACE_BLOCKS}"
+            f" --ncap={NVME_NAMESPACE_BLOCKS} --flbas={NVME_NAMESPACE_FLBAS}",
+            timeout=TIMEOUT_NVME_COMMAND,
+        )
+    if not nvme_query(f"nvme list-ns {device}")["nsid_list"]:
+        run_command(
+            f"nvme attach-ns {device} --namespace-id=1"
+            f" --controllers={identity['cntlid']}",
+            timeout=TIMEOUT_NVME_COMMAND,
+        )
+    # Without this the block device waits for the drive's namespace-changed event.
+    run_command(f"nvme ns-rescan {device}", timeout=TIMEOUT_NVME_COMMAND)
+
+    deadline = time.monotonic() + TIMEOUT_NVME_APPEAR
+    while not nvme_namespace_dirs(controller):
+        if time.monotonic() >= deadline:
+            raise ProvisioningError(f"{device} has a namespace but no block device appeared")
+        time.sleep(0.5)
+    logging.warning(f"{device} namespace restored")
+
+
+def repair_blank_nvme_namespaces() -> None:
+    """Some OCI DenseIO instances hand over a local NVMe drive whose namespace has been deleted.
+    Linux creates no block device and reports no error, because an empty namespace list is a
+    valid response, so the node clusters with no read cache."""
+    # A drive we cannot repair must not fail provisioning; the node clusters degraded.
+    try:
+        controllers = glob.glob(f"{NVME_SYSFS_CLASS}/nvme*")
+        blank = [
+            c
+            for c in sorted(os.path.basename(p) for p in controllers)
+            if re.fullmatch(r"nvme\d+", c) and not nvme_namespace_dirs(c)
+        ]
+        if not blank:
+            return
+
+        if not command_exists("nvme"):
+            run_command_with_retry(
+                "dnf install -y nvme-cli", timeout=TIMEOUT_PACKAGE_INSTALL
+            )
+
+        deadline = time.monotonic() + NVME_REPAIR_WINDOW
+        for controller in blank:
+            while True:
+                try:
+                    repair_nvme_namespace(controller)
+                    break
+                except Exception as e:
+                    logging.error(f"Repair of /dev/{controller} failed: {e}")
+                if time.monotonic() >= deadline:
+                    break
+                time.sleep(NVME_REPAIR_RETRY_DELAY)
+    except Exception as e:
+        logging.error(f"Could not check the local NVMe drives: {e}")
 
 
 def get_vnic_metadata() -> List[Dict[str, str]]:
@@ -375,6 +474,8 @@ def main() -> None:
     install_package_with_retry("sysstat")
 
     disable_conflicting_services()
+
+    repair_blank_nvme_namespaces()
 
     create_qumulo_service()
 
