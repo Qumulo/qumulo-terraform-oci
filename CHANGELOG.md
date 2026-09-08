@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.0.3](https://github.com/Qumulo/qumulo-terraform-oci/compare/qumulo-terraform-oci-v3.0.2...qumulo-terraform-oci-v3.0.3) (2026-09-08)
+
+
+### Bug Fixes
+
+* recreate a missing local NVMe namespace during provisioning ([6f23707](https://github.com/Qumulo/qumulo-terraform-oci/commit/6f237077a532ac14ba52e0a4bad52f98fe5d6407))
+* recreate a missing local NVMe namespace during provisioning ([a90f3c2](https://github.com/Qumulo/qumulo-terraform-oci/commit/a90f3c2476da93a665411311af8c36de82d762ec))
+
 ## [3.0.2](https://github.com/Qumulo/qumulo-terraform-oci/compare/qumulo-terraform-oci-v3.0.1...qumulo-terraform-oci-v3.0.2) (2026-08-26)
 
 
